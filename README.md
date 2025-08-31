@@ -2,6 +2,6 @@
 
 Group List:
 1. Abdulrahman Abougendia (aabougendia)
-2. Andrew Thajeb (athajeb)
+2. Andrew Thajeb (athajeb) 
 3. Ali Omar (AliAyman101190)
 4. Dong-Lin Shih/Tony (shih70)
