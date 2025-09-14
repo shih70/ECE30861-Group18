@@ -1,13 +1,31 @@
-[build-system]
-requires = ["setuptools", "wheel"]
-build-backend = "setuptools.build_meta"
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+addopts = [
+  "-q",
+  "--cov=cli_project",
+  "--cov-report=term-missing",
+  "--cov-report=xml"
+]
+
+[tool.coverage.run]
+branch = true
+source = ["cli_project"]
 
 [tool.flake8]
 max-line-length = 100
+extend-ignore = ["E203", "W503"]
+exclude = [
+  ".git", ".venv", "venv", "__pycache__", ".pytest_cache", ".mypy_cache", "build", "dist"
+]
+per-file-ignores = ["src/**/__init__.py:F401"]
 
-[tool.isort]
-profile = "black"
-
-[tool.pytest.ini_options]
-testpaths = ["tests"]
-
+[tool.mypy]
+python_version = "3.10"
+files = ["src/cli_project"]
+strict = true
+ignore_missing_imports = true
+warn_unused_ignores = true
+warn_return_any = true
+show_error_codes = true
+cache_dir = "/tmp/mypy_cache"
