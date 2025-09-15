@@ -1,21 +1,21 @@
 from __future__ import annotations
-
-import os
-import sys
-import subprocess
 from pathlib import Path
 from typing import Annotated
+import sys
+import subprocess
 import typer
+
 
 # Single, global app instance
 app = typer.Typer(help="CLI Project – starter CLI (typed)", add_completion=False, no_args_is_help=False)
 
 
-## Helpers Functions
+# Helpers Functions
 # A helper to print error messages to stderr
 def _eprint(msg: str) -> None:
     sys.stderr.write(msg + '\n')
     sys.stderr.flush()
+
 
 # A helper to exit with a given code [0: sucess, not 0: failure]
 def _exit(code: int) -> None:
@@ -31,11 +31,11 @@ def install() -> None:
       - exit 0 on success, non-zero on failure
     """
     req = Path("requirements.txt")
-    
+
     if not req.exists():
         _eprint("requirements.txt not found in project root.")
         _exit(1)
-    
+
     # Ensures that pip commands run with the venv python
     py = sys.executable
 
@@ -49,8 +49,9 @@ def install() -> None:
         if rc != 0:
             _eprint(f"Command failed: {' '.join(cmd)} (exit {rc})")
             _exit(rc)
-    
+
     _exit(0)
+
 
 @app.command(help="Run test suite and print coerage line")
 def test() -> None:
@@ -94,7 +95,6 @@ def test() -> None:
 
 #     # Spec says output only for Model URLs; stub emits nothing.
 #     _exit(0)
-
 
 
 def hello(
