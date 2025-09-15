@@ -64,37 +64,41 @@ def test() -> None:
     _exit(1)
 
 
-# @app.callback(invoke_without_command=True)
-# def main(ctx: typer.Context, url_file: Path | None = typer.Argument(None)) -> None:
-#     """
-#     Implements: ./run URL_FILE  (STUB)
-#       - If a URL file is provided and no subcommand was invoked:
-#         * validate the file exists & is readable
-#         * (stub) do nothing else, exit 0
-#       - If nothing provided and no subcommand: show usage, exit 1
-#     """
-#     # If a subcommand (install/test) was used, do nothing here.
-#     if ctx.invoked_subcommand is not None:
-#         return
+@app.callback(invoke_without_command=True)
+def main(ctx: typer.Context, url_file: Path | None = typer.Argument(None)) -> None:
+    """
+    Implements: ./run URL_FILE  (STUB)
+      - If a URL file is provided and no subcommand was invoked:
+        * validate the file exists & is readable
+        * (stub) do nothing else, exit 0
+      - If nothing provided and no subcommand: show usage, exit 1
+    """
+    # If a subcommand (install/test) was used, do nothing here.
+    if ctx.invoked_subcommand is not None:
+        return
 
-#     if url_file is None:
-#         _eprint("Usage: ./run [install|test|URL_FILE]")
-#         _exit(1)
+    if url_file is None:
+        _eprint("Usage: ./run [install|test|URL_FILE]")
+        _exit(1)
 
-#     # Validate file (ASCII newline-delimited URLs per spec)
-#     if not url_file.exists() or not url_file.is_file():
-#         _eprint(f"URL file not found: {url_file}")
-#         _exit(1)
+    # Validate file (ASCII newline-delimited URLs per spec)
+    if not url_file.exists() or not url_file.is_file():
+        _eprint(f"URL file not found: {url_file}")
+        _exit(1)
 
-#     try:
-#         # Touch-read to ensure it's readable; your real scorer will parse lines here.
-#         _ = url_file.read_text(encoding="utf-8", errors="strict")
-#     except Exception as exc:
-#         _eprint(f"Failed to read URL file: {exc}")
-#         _exit(1)
+    try:
+        # Touch-read to ensure it's readable; your real scorer will parse lines here.
+        with url_file.open("r", encoding="utf-8") as f:
+            for line in f:
+                url = line.strip()
+                if url:
+                    print(json.dumps({"url": url, "result": "TODO"}))
+    except Exception as exc:
+        _eprint(f"Failed to read URL file: {exc}")
+        _exit(1)
 
-#     # Spec says output only for Model URLs; stub emits nothing.
-#     _exit(0)
+    # Spec says output only for Model URLs; stub emits nothing.
+    _exit(0)
 
 
 def hello(
