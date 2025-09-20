@@ -5,7 +5,15 @@ import sys
 # Add src/ to sys.path so cli_project can be imported
 sys.path.insert(0, str(Path(__file__).resolve().parent / "src"))
 
-from cli_project.cli import app
+from cli_project.cli import app, handle_url_file
 
 if __name__ == "__main__":
-    app()
+    # if first arg looks like a file, skip Typer subcommands
+    if len(sys.argv) > 1:
+        arg = sys.argv[1]
+        if arg.endswith(".txt") or Path(arg).is_file():
+            handle_url_file(Path(arg))
+            sys.exit(0)
+
+    # otherwise let Typer do subcommands
+    app(prog_name="run")

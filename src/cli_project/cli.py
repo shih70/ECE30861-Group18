@@ -44,8 +44,8 @@ def install() -> None:
     py = sys.executable
 
     cmds = [
-        [py, "-m", "pip", "install", "--upgrade", "pip", "wheel"],
-        [py, "-m", "pip", "install", "-r", str(req)],
+        [py, "-m", "pip", "install", "--user", "--upgrade", "pip", "wheel"],
+        [py, "-m", "pip", "install", "--user", "-r", str(req)],
     ]
 
     for cmd in cmds:
@@ -68,23 +68,40 @@ def test() -> None:
     _exit(1)
 
 
-@app.callback(invoke_without_command=True)
-def root(
-    ctx: typer.Context,
-    url_file: Path = typer.Argument(
-        None,
-        exists=True,
-        file_okay=True,
-        dir_okay=False,
-        readable=True,
-        help="Path to a text file (one URL per line).",
-    ),
-) -> None:
-    if ctx.invoked_subcommand is not None:
-        return
+# @app.callback(invoke_without_command=True)
+# def root(
+#     ctx: typer.Context,
+#     url_file: Path = typer.Argument(
+#         None,
+#         exists=True,
+#         file_okay=True,
+#         dir_okay=False,
+#         readable=True,
+#         help="Path to a text file (one URL per line).",
+#     ),
+# ) -> None:
+#     if ctx.invoked_subcommand is not None:
+#         return
     
+#     if url_file is None:
+#         _eprint("Usage: ./run [install|test|URL_FILE]", err=True)
+#         _exit(1)
+    
+#     urls: list[str] = []
+#     with url_file.open("r", encoding="utf-8") as f:
+#         for line in f:
+#             url = line.strip()
+#             if url:
+#                 urls.append(url)
+
+#         # checking that's working
+#         for url in urls:
+#             print(url)
+        
+#     _exit(0)
+def handle_url_file(url_file: Path) -> None:
     if url_file is None:
-        _eprint("Usage: ./run [install|test|hello|URL_FILE]", err=True)
+        _eprint("Usage: ./run [install|test|URL_FILE]", err=True)
         _exit(1)
     
     urls: list[str] = []
@@ -97,9 +114,7 @@ def root(
         # checking that's working
         for url in urls:
             print(url)
-        
-    _exit(0)
-
+            
 def main() -> None:
     """
     Entry-point for `python -m cli_project.cli`.
