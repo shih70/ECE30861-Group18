@@ -1,3 +1,5 @@
 https://huggingface.co/datasets/xlangai/AgentNet
 https://github.com/SkyworkAI/Matrix-Game
 https://huggingface.co/google/gemma-3-270m/tree/main
+https://huggingface.co/datasets/other/data
+https://huggingface.co/openai/gpt-neo/tree/main
