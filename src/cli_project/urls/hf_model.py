@@ -5,3 +5,11 @@
 # object exposes the category "MODEL" and a normalized name, ensuring that all downstream
 # components (adapters, metrics, executor) can rely on uniform, validated model references
 # without duplicating Hugging Face–specific parsing logic.
+
+import json, time
+from .base import URLBase
+
+@dataclass
+class HFModelURL(URLBase):
+    def __init__(self: URLBase, raw: str) -> None:
+        super().__init__(raw, "MODEL")
