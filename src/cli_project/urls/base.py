@@ -2,7 +2,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import List, Union, Any
-
+from cli_project.metrics.base import Metrics
+from urllib.parse import urlparse
 
 # -------------------
 # Base + Subclasses
@@ -31,49 +32,27 @@ class CodeRepoURL(UrlItem):
 class HFModelURL(UrlItem):
     datasets: List[HFDatasetURL] = field(default_factory=list)
     code: List[CodeRepoURL] = field(default_factory=list)
+    metrics: Metrics = field(default_factory=Metrics)
 
     def __init__(self, url: str, 
                  datasets: List[HFDatasetURL] | None = None, 
-                 code: List[CodeRepoURL] | None = None):
+                 code: List[CodeRepoURL] | None = None,
+                 metrics: Metrics | None = None):
         super().__init__(url, "MODEL")
         self.datasets = datasets or []
         self.code = code or []
+        self.metrics = metrics or Metrics()
 
+ 
     def to_record(self) -> dict[str, Any]:
-        """Return NDJSON-ready dict (stubs for now)."""
+        """Return NDJSON-ready dict (with metrics)."""
         record = {
-            "name": self.url,
+            "name": extract_model_name(self.url),
             "category": self.category,
-            "net_score": 0.0,
-            "net_score_latency": 0,
-            "ramp_up_time": 0.0,
-            "ramp_up_time_latency": 0,
-            "bus_factor": 0.0,
-            "bus_factor_latency": 0,
-            "performance_claims": 0.0,
-            "performance_claims_latency": 0,
-            "license": 0.0,
-            "license_latency": 0,
-            "size_score": {
-                "raspberry_pi": 0.0,
-                "jetson_nano": 0.0,
-                "desktop_pc": 0.0,
-                "aws_server": 0.0,
-            },
-            "size_score_latency": 0,
-            "dataset_and_code_score": 0.0,
-            "dataset_and_code_score_latency": 0,
-            "dataset_quality": 0.0,
-            "dataset_quality_latency": 0,
-            "code_quality": 0.0,
-            "code_quality_latency": 0,
+            **self.metrics.to_dict(),  # merge metrics
         }
-        if self.datasets:
-            record["linked_datasets"] = [d.url for d in self.datasets]
-        if self.code:
-            record["linked_code"] = [c.url for c in self.code]
+        
         return record
-
 
 # -------------------
 # Classifier
@@ -132,3 +111,18 @@ def parse_url_file(path: Path) -> List[HFModelURL]:
             continue
 
     return models
+
+## Helper functions
+def extract_model_name(url: str) -> str:
+    """Extract Hugging Face model name from a URL."""
+    path_parts: list[str] = urlparse(url).path.strip("/").split("/")
+    # Typical HF model URL: /org/model/tree/main
+    if len(path_parts) >= 2:
+        # If there's a "/tree/" suffix, grab the segment before "tree"
+        if "tree" in path_parts:
+            idx = path_parts.index("tree")
+            if idx > 0:
+                return path_parts[idx - 1]
+        # Otherwise, last part is the model name
+        return path_parts[-1]
+    return url  # fallback
