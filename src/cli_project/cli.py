@@ -4,6 +4,7 @@ import subprocess
 import json, sys, time
 from cli_project.urls.base import parse_url_file
 from cli_project.io.ndjson import NDJSONEncoder
+from cli_project.core.entities import HFModel
 
 def install() -> None:
     """Implements ./run install"""
@@ -27,9 +28,14 @@ def test() -> None:
 
 def score(url_file: str) -> None:
     """Implements ./run URL_FILE"""
-    models = parse_url_file(Path(url_file))
-    NDJSONEncoder.print_records(models)
+    # Parse into URL objects
+    model_urls = parse_url_file(Path(url_file))
 
+    # Wrap into HFModel objects (so they include metrics)
+    models = [HFModel(mu) for mu in model_urls]
+
+    # Encode + print as NDJSON
+    NDJSONEncoder.print_records(models)
     sys.exit(0)
 
 if __name__ == "__main__":
