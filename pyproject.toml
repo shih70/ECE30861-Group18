@@ -16,7 +16,7 @@ source = ["cli_project"]
 max-line-length = 100
 extend-ignore = ["E203", "W503"]
 exclude = [
-  ".git", ".venv", "venv", "__pycache__", ".pytest_cache", ".mypy_cache", "build", "dist"
+  ".git", ".venv", "venv", "__pycache__", ".pytest_cache", ".mypy_cache", "build", "dist","src"
 ]
 per-file-ignores = ["src/**/__init__.py:F401"]
 

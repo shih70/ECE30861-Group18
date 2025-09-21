@@ -26,7 +26,7 @@ class HFModel():
             if idx > 0:
                 return parts[idx - 1]
         return parts[-1] if parts else self.model_url.url
-    
+
     def to_record(self) -> dict[str, Any]:
         """Return NDJSON-ready dict (with metrics only)."""
         return {

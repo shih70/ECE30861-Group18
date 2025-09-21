@@ -40,4 +40,3 @@ def score(url_file: str) -> None:
 
 if __name__ == "__main__":
     pass
-    

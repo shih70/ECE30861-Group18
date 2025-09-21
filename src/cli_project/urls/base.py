@@ -33,14 +33,14 @@ class HFModelURL(UrlItem):
     datasets: List[HFDatasetURL] = field(default_factory=list)
     code: List[CodeRepoURL] = field(default_factory=list)
 
-    def __init__(self, url: str, 
-                 datasets: List[HFDatasetURL] | None = None, 
+    def __init__(self, url: str,
+                 datasets: List[HFDatasetURL] | None = None,
                  code: List[CodeRepoURL] | None = None):
         super().__init__(url, "MODEL")
         self.datasets = datasets or []
         self.code = code or []
 
- 
+
 
 
 # -------------------

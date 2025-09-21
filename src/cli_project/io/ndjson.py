@@ -18,7 +18,7 @@ class NDJSONEncoder:
     def encode_all(models: list[HFModel]) -> str:
         """Return full NDJSON (one line per model)."""
         return "\n".join(NDJSONEncoder.encode(m) for m in models)
-    
+
     @staticmethod
     def print_records(models: list[HFModel]) -> None:
         """ Print full NDJSON in stdout """
