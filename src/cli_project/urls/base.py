@@ -32,27 +32,16 @@ class CodeRepoURL(UrlItem):
 class HFModelURL(UrlItem):
     datasets: List[HFDatasetURL] = field(default_factory=list)
     code: List[CodeRepoURL] = field(default_factory=list)
-    metrics: Metrics = field(default_factory=Metrics)
 
     def __init__(self, url: str, 
                  datasets: List[HFDatasetURL] | None = None, 
-                 code: List[CodeRepoURL] | None = None,
-                 metrics: Metrics | None = None):
+                 code: List[CodeRepoURL] | None = None):
         super().__init__(url, "MODEL")
         self.datasets = datasets or []
         self.code = code or []
-        self.metrics = metrics or Metrics()
 
  
-    def to_record(self) -> dict[str, Any]:
-        """Return NDJSON-ready dict (with metrics)."""
-        record = {
-            "name": extract_model_name(self.url),
-            "category": self.category,
-            **self.metrics.to_dict(),  # merge metrics
-        }
-        
-        return record
+
 
 # -------------------
 # Classifier
@@ -111,18 +100,3 @@ def parse_url_file(path: Path) -> List[HFModelURL]:
             continue
 
     return models
-
-## Helper functions
-def extract_model_name(url: str) -> str:
-    """Extract Hugging Face model name from a URL."""
-    path_parts: list[str] = urlparse(url).path.strip("/").split("/")
-    # Typical HF model URL: /org/model/tree/main
-    if len(path_parts) >= 2:
-        # If there's a "/tree/" suffix, grab the segment before "tree"
-        if "tree" in path_parts:
-            idx = path_parts.index("tree")
-            if idx > 0:
-                return path_parts[idx - 1]
-        # Otherwise, last part is the model name
-        return path_parts[-1]
-    return url  # fallback
