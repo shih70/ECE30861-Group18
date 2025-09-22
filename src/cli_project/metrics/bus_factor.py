@@ -12,9 +12,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Dict
 
-from modelscore.entities.base import EntitiesBundle
-from modelscore.metrics.base import Metric, MetricResult, clamp01
-from modelscore.metrics.registry import register
+from src.entities.base import EntitiesBundle
+from src.metrics.base import Metric, MetricResult, clamp01
+from src.metrics.registry import register
 
 
 @dataclass
