@@ -1,8 +1,9 @@
-import requests
+import requests # type: ignore
 from urllib.parse import urlparse
 import re
+from typing import Any
 
-def extract_repo_id(url):
+def extract_repo_id(url: str) -> str:
     """
     Extract the repo ID (like 'google-bert/bert-base-uncased') from the HF URL.
     """
@@ -16,12 +17,12 @@ def extract_repo_id(url):
     else:
         raise ValueError("URL does not contain a valid repo identifier")
 
-def fetch_repo_metadata(repo_url):
+def fetch_repo_metadata(repo_url: str) -> dict[str, Any]:
     try:
         repo_id = extract_repo_id(repo_url)
     except ValueError as e:
         print(e)
-        return None
+        return {"": None}
 
     README_url = f"https://huggingface.co/{repo_id}/raw/main/README.md"
 
@@ -29,12 +30,12 @@ def fetch_repo_metadata(repo_url):
         response = requests.get(README_url)
         if response.status_code != 200:
             print(f"Failed to fetch data: HTTP {response.status_code}")
-            return None
+            return {"": None}
         
         return response.text
     except Exception as e:
         print(f"Error fetching repo metadata: {e}")
-        return None
+        return {"": None}
 
 def strip_hf_metadata(text: str) -> str:
     """
@@ -42,7 +43,7 @@ def strip_hf_metadata(text: str) -> str:
     """
     return re.sub(r"^---[\s\S]*?---\n", "", text, count=1)
 
-def query_readme(repo_url):
+def query_readme(repo_url: str) -> None:
     api_key = ""
     readme_text = fetch_repo_metadata(repo_url)
     if not readme_text:

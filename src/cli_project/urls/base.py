@@ -2,7 +2,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import List, Union, Any
-from cli_project.metrics.base import Metrics
+from cli_project.metrics.base import MetricResult
 from urllib.parse import urlparse
 
 # -------------------
@@ -37,6 +37,7 @@ class HFModelURL(UrlItem):
                  datasets: List[HFDatasetURL] | None = None,
                  code: List[CodeRepoURL] | None = None):
         super().__init__(url, "MODEL")
+        self.url = url
         self.datasets = datasets or []
         self.code = code or []
 

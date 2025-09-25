@@ -1,7 +1,9 @@
-import requests
+import requests # type: ignore
 from urllib.parse import urlparse
+from typing import Any
+from pathlib import Path
 
-def extract_repo_id(url):
+def extract_repo_id(url: str) -> str:
     """
     Extract the repo ID (like 'google-bert/bert-base-uncased') from the HF URL.
     """
@@ -15,12 +17,12 @@ def extract_repo_id(url):
     else:
         raise ValueError("URL does not contain a valid repo identifier")
 
-def fetch_repo_metadata(repo_url):
+def fetch_repo_metadata(repo_url: str) -> dict[str, Any]:
     try:
         repo_id = extract_repo_id(repo_url)
     except ValueError as e:
         print(e)
-        return None
+        return {"" : None}
 
     api_url = f"https://huggingface.co/api/models/{repo_id}"
 
@@ -28,7 +30,7 @@ def fetch_repo_metadata(repo_url):
         response = requests.get(api_url)
         if response.status_code != 200:
             print(f"Failed to fetch data: HTTP {response.status_code}")
-            return None
+            return {"" : None}
         
         data = response.json()
 
@@ -47,7 +49,7 @@ def fetch_repo_metadata(repo_url):
         }
     except Exception as e:
         print(f"Error fetching repo metadata: {e}")
-        return None
+        return {"" : None}
 
 # Example usage:
 

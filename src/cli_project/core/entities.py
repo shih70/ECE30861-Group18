@@ -3,19 +3,21 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import List, Union, Any
 from cli_project.urls.base import HFModelURL
-from cli_project.metrics.base import Metrics
+from cli_project.metrics.base import Metric
 from urllib.parse import urlparse
 
 
 @dataclass
 class HFModel():
     model_url: HFModelURL
-    metrics: Metrics = field(default_factory=Metrics)
+    repo_id: str
+    metadata: dict[str, Any]
+    metrics: Metric = field(default_factory=Metric)
 
     def __init__(self, model_url: HFModelURL,
-                 metrics: Metrics | None = None):
+                 metrics: Metric):
         self.model_url = model_url
-        self.metrics = metrics or Metrics()
+        self.metrics = metrics
 
     ## Helper function
     def extract_model_name(self) -> str:
@@ -32,5 +34,5 @@ class HFModel():
         return {
             "name": self.extract_model_name(),
             "category": "MODEL",
-            **self.metrics.to_dict(),
+            # **self.metrics.to_dict(),
         }

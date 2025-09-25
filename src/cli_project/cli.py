@@ -5,6 +5,7 @@ import json, sys, time
 from cli_project.urls.base import parse_url_file
 from cli_project.io.ndjson import NDJSONEncoder
 from cli_project.core.entities import HFModel
+from cli_project.adapters.huggingface import fetch_repo_metadata
 
 def install() -> None:
     """Implements ./run install"""
@@ -33,6 +34,19 @@ def score(url_file: str) -> None:
 
     # Wrap into HFModel objects (so they include metrics)
     models = [HFModel(mu) for mu in model_urls]
+
+    
+    for model in models:
+        info = fetch_repo_metadata(model)
+        if info:
+            print(f"Metadata for {info['repo_id']}:")
+            print(f"  Downloads: {info['downloads']}")
+            print(f"  Likes: {info['likes']}")
+            print(f"  Last Modified: {info['last_modified']}")
+            print(f"  Number of files: {info['num_files']}")
+            print("-" * 40)
+        else:
+            print(f"Could not fetch metadata for {model.model_url.url}")
 
     # Encode + print as NDJSON
     NDJSONEncoder.print_records(models)
