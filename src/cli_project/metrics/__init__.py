@@ -12,13 +12,13 @@ Notes:
 """
 
 from .size_score import evaluate as eval_size
-from .license import evaluate as eval_license
-from .ramp_up_time import evaluate as eval_ramp_up_time
-from .dataset_and_code import evaluate as eval_dataset_and_code
+# from .license import evaluate as eval_license
+# from .ramp_up_time import evaluate as eval_ramp_up_time
+# from .dataset_and_code import evaluate as eval_dataset_and_code
 from .dataset_quality import evaluate as eval_dataset_quality
 from .code_quality import evaluate as eval_code_quality
 from .performance_claims import evaluate as eval_performance_claims
-from .bus_factor import evaluate as eval_bus_factor
+# from .bus_factor import evaluate as eval_bus_factor
 
 __all__ = [
     "eval_size",

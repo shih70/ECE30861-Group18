@@ -3,7 +3,7 @@ from cli_project.core.entities import HFModel
 import requests # type: ignore
 from typing import Any
 from urllib.parse import urlparse
-
+import re
 
 
 # def fetch_repo_metadata(model: HFModelURL) -> dict[str, Any]:
@@ -77,12 +77,30 @@ def fetch_repo_metadata(model: HFModel) -> dict[str, Any]:
 
         data = response.json()
 
+        # -------------------------------
+        # License: API first, README fallback
+        # -------------------------------
+        raw_license = data.get("license", "N/A")
+        if raw_license == "N/A":
+            readme_url = f"https://huggingface.co/{model.repo_id}/raw/main/README.md"
+            try:
+                resp = requests.get(readme_url, timeout=10)
+                if resp.status_code == 200:
+                    text = resp.text.lower()
+                    for line in text.splitlines():
+                        if line.lower().startswith("license:"):
+                            raw_license = line.split(":", 1)[1].strip()
+                            break
+            except Exception as e:
+                print(f"Error fetching README for license: {e}")
+
         metadata = {
             "repo_id": model.repo_id,
             "downloads": data.get("downloads", "N/A"),
             "likes": data.get("likes", "N/A"),
             "last_modified": data.get("lastModified", "N/A"),
-            "num_files": len(data.get("siblings", []))
+            "num_files": len(data.get("siblings", [])),
+            "license": raw_license,
         }
 
         model.metadata = metadata
@@ -91,8 +109,6 @@ def fetch_repo_metadata(model: HFModel) -> dict[str, Any]:
     except Exception as e:
         print(f"Error fetching repo metadata: {e}")
         return {"": None}
-
-        
 
 
 # -------------------
@@ -119,6 +135,7 @@ if __name__ == "__main__":
             print(f"  Likes: {info['likes']}")
             print(f"  Last Modified: {info['last_modified']}")
             print(f"  Number of files: {info['num_files']}")
+            print(f"  License: {info['license']}")
             print("-" * 40)
         else:
             print(f"Could not fetch metadata for {model.url}")
