@@ -1,3 +1,14 @@
+"""
+DOCTYPE: SizeScoreMetric for model deployment suitability.
+
+This metric estimates model size compatibility across four device types
+(Raspberry Pi, Jetson Nano, Desktop PC, AWS Server) using size metadata
+from Hugging Face (`size_mb`).
+
+Each device has a defined size range; models score 1.0 if they fit, 0.0 otherwise.
+Returns a score dictionary and latency in milliseconds.
+"""
+
 import time
 from cli_project.metrics.base import Metric
 from cli_project.core.entities import HFModel
