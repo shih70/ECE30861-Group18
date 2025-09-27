@@ -17,7 +17,7 @@ class HFModel():
     def __init__(self, model_url: HFModelURL,
                  metrics: Metric):
         self.model_url = model_url
-        self.metrics = metrics
+        # self.metrics = metrics
 
     ## Helper function
     def extract_model_name(self) -> str:

@@ -25,6 +25,7 @@ cffi==1.15.0
 cfgv==3.4.0
 chardet==4.0.0
 charset-normalizer==3.4.3
+-e git+ssh://git@github.com/shih70/ECE30861-Group18.git@45f8482da0a307ac952b0c9dc5b68141a6c27e22#egg=cli_project
 click==8.2.1
 click-plugins==1.1.1
 cloud-init==25.1.4
@@ -66,6 +67,7 @@ cssselect2==0.4.1
 cupshelpers==1.0
 cycler==0.11.0
 dbus-python==1.2.18
+debugpy==1.8.17
 decorator==4.4.2
 defer==1.0.6
 defusedxml==0.7.1
