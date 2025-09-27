@@ -1,10 +1,10 @@
 import concurrent.futures
 import time
-from typing import List
+from typing import List, Any
 
 from cli_project.metrics.base import Metric, MetricResult
 
-def compute_all_metrics(metadata: dict, metrics: List[Metric], max_workers: int | None = None) -> List[MetricResult]:
+def compute_all_metrics(metadata: dict[str, Any], metrics: List[Metric], max_workers: int | None = None) -> List[MetricResult]:
     """
     Compute all metrics for a given Hugging Face model metadata in parallel.
     """
