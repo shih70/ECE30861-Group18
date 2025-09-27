@@ -29,27 +29,18 @@ def test() -> None:
 
 def score(url_file: str) -> None:
     """Implements ./run URL_FILE"""
-    # Parse into URL objects
-    model_urls = parse_url_file(Path(url_file))
+    url_path = Path(url_file)
+    models = parse_url_file(url_path)
 
-    # Wrap into HFModel objects (so they include metrics)
-    models = [HFModel(mu) for mu in model_urls]
-
-    
-    for model in models:
-        info = fetch_repo_metadata(model)
-        if info:
-            print(f"Metadata for {info['repo_id']}:")
-            print(f"  Downloads: {info['downloads']}")
-            print(f"  Likes: {info['likes']}")
-            print(f"  Last Modified: {info['last_modified']}")
-            print(f"  Number of files: {info['num_files']}")
-            print("-" * 40)
-        else:
-            print(f"Could not fetch metadata for {model.model_url.url}")
+    for m in models:
+        print("MODEL:", m.url)
+        for c in m.code:
+            print("  CODE:", c.url)
+        for d in m.datasets:
+            print("  DATASET:", d.url)
 
     # Encode + print as NDJSON
-    NDJSONEncoder.print_records(models)
+    # NDJSONEncoder.print_records(models)
     sys.exit(0)
 
 if __name__ == "__main__":
