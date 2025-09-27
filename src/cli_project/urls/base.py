@@ -30,14 +30,13 @@ class CodeRepoURL(UrlItem):
 
 @dataclass
 class HFModelURL(UrlItem):
-    datasets: List[HFDatasetURL] = field(default_factory=list)
-    code: List[CodeRepoURL] = field(default_factory=list)
+    datasets: list[HFDatasetURL]
+    code: list[CodeRepoURL]
 
     def __init__(self, url: str,
-                 datasets: List[HFDatasetURL] | None = None,
-                 code: List[CodeRepoURL] | None = None):
+                 datasets: list[HFDatasetURL] | None = None,
+                 code: list[CodeRepoURL] | None = None):
         super().__init__(url, "MODEL")
-        self.url = url
         self.datasets = datasets or []
         self.code = code or []
 
@@ -48,56 +47,57 @@ class HFModelURL(UrlItem):
 # Classifier
 # -------------------
 
-def classify_url(raw: str) -> Union[HFDatasetURL, CodeRepoURL, HFModelURL, UrlItem]:
-    """Classify a raw URL string into a typed UrlItem subclass."""
-    raw = raw.strip()
+# def classify_url(raw: str) -> Union[HFDatasetURL, CodeRepoURL, HFModelURL, UrlItem]:
+#     """Classify a raw URL string into a typed UrlItem subclass."""
+#     raw = raw.strip()
 
-    if "huggingface.co/datasets" in raw:
-        return HFDatasetURL(raw)
-    elif "github.com" in raw:
-        return CodeRepoURL(raw)
-    elif "huggingface.co" in raw and "/tree/" in raw:
-        return HFModelURL(raw)
-    else:
-        return UrlItem(raw, "UNKNOWN")
+#     if "huggingface.co/datasets" in raw:
+#         return HFDatasetURL(raw)
+#     elif "github.com" in raw:
+#         return CodeRepoURL(raw)
+#     elif "huggingface.co" in raw and "/tree/" in raw:
+#         return HFModelURL(raw)
+#     else:
+#         return UrlItem(raw, "UNKNOWN")
 
-def parse_url_file(path: Path) -> List[HFModelURL]:
+def parse_url_file(path: Path) -> list[HFModelURL]:
     """
-    Parse a text file of URLs into HFModelURL objects.
-
-    - Datasets and code URLs that appear before a model are linked to that model.
-    - Only models are returned in the output list.
+    Parse a text file where each line = code, dataset, model.
+    Code and dataset may be empty. Models are required.
+    Tracks datasets seen so far.
     """
     if not path.exists():
         raise FileNotFoundError(f"File not found: {path}")
 
+    models: list[HFModelURL] = []
+    seen_datasets: set[str] = set()
+
     with path.open("r", encoding="utf-8") as f:
-        urls = [line.strip() for line in f if line.strip()]
+        for line in f:
+            # split into up to 3 fields
+            parts = [p.strip() for p in line.split(",")]
+            if len(parts) < 3:
+                continue  # skip malformed line
 
-    dataset_urls: List[HFDatasetURL] = []
-    code_urls: List[CodeRepoURL] = []
-    models: List[HFModelURL] = []
+            code_raw, dataset_raw, model_raw = parts[:3]
 
-    for raw in urls:
-        item = classify_url(raw)
+            if not model_raw:
+                continue  # must have a model
 
-        if isinstance(item, HFDatasetURL):
-            dataset_urls.append(item)
+            # wrap optional fields
+            code_objs = [CodeRepoURL(code_raw)] if code_raw else []
+            dataset_objs = []
 
-        elif isinstance(item, CodeRepoURL):
-            code_urls.append(item)
+            if dataset_raw and dataset_raw not in seen_datasets:
+                dataset_objs = [HFDatasetURL(dataset_raw)]
+                seen_datasets.add(dataset_raw)
 
-        elif isinstance(item, HFModelURL):
-            # attach datasets + code to this model
-            item.datasets = dataset_urls
-            item.code = code_urls
-            models.append(item)
-
-            # reset context for the next model
-            dataset_urls, code_urls = [], []
-
-        else:
-            # ignore or log unknown URLs
-            continue
+            # build model
+            model = HFModelURL(
+                model_raw,
+                datasets=dataset_objs,
+                code=code_objs
+            )
+            models.append(model)
 
     return models
