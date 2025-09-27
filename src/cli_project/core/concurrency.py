@@ -4,7 +4,7 @@ from typing import List, Any
 
 from cli_project.metrics.base import Metric, MetricResult
 
-def compute_all_metrics(metadata: dict[str, Any], metrics: List[Metric], max_workers: int | None = None) -> List[MetricResult]:
+def compute_all_metrics(context: dict[str, Any], metrics: List[Metric], max_workers: int | None = None) -> List[MetricResult]:
     """
     Compute all metrics for a given Hugging Face model metadata in parallel.
     """
@@ -12,7 +12,7 @@ def compute_all_metrics(metadata: dict[str, Any], metrics: List[Metric], max_wor
 
     def timed_compute(metric: Metric) -> MetricResult:
         t0 = time.perf_counter()
-        result = metric.compute(metadata)
+        result = metric.compute(context)
         latency = int((time.perf_counter() - t0) * 1000)
         return MetricResult(
             name=result.name,
