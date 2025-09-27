@@ -101,6 +101,7 @@ def fetch_repo_metadata(model: HFModel) -> dict[str, Any]:
             "last_modified": data.get("lastModified", "N/A"),
             "num_files": len(data.get("siblings", [])),
             "license": raw_license,
+            "size_mb": data.get("usedStorage", 0) / (1024 * 1024),
         }
 
         model.metadata = metadata
