@@ -12,7 +12,7 @@ from cli_project.metrics.license import LicenseMetric
 from cli_project.metrics.bus_factor import BusFactorMetric
 from cli_project.metrics.performance_claims import PerformanceClaimsMetric
 from cli_project.metrics.ramp_up_time import RampUpTimeMetric
-
+from cli_project.metrics.size_score import SizeScoreMetric
 
 from cli_project.adapters.huggingface import fetch_repo_metadata
 from cli_project.adapters.git_repo import fetch_bus_factor_metrics, fetch_bus_factor_raw_contributors
@@ -63,7 +63,7 @@ def score(url_file: str) -> None:
         hf_metadata = fetch_repo_metadata(model)  # fills model.repo_id + model.metadata
         if model.model_url.code:
             repo_url = model.model_url.code[0].url
-            repo_metadata = fetch_bus_factor_raw_contributors(repo_url, "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")
+            repo_metadata = fetch_bus_factor_raw_contributors(repo_url)
         else:
             repo_metadata = {}
             # repo_metadata = fetch_bus_factor_raw_contributors(model.model_url.url)

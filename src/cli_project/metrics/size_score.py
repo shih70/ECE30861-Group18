@@ -30,7 +30,7 @@ class SizeScoreMetric(Metric):
 
     def compute(self, metadata: dict[str, Any]) -> MetricResult:
         t0 = time.time()
-        size_mb = metadata.get("size_mb", 0)
+        size_mb = metadata["hf_metadata"].get("size_mb", 0)
         #print(f"[DEBUG] Model size: {size_mb} MB")  # <-- ADD THIS LINE
         scores = {}
 
