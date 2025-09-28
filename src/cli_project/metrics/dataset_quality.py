@@ -23,7 +23,7 @@ class DatasetQualityMetric(Metric):
     def compute(self, metadata: dict[str, Any]) -> MetricResult:
         t0 = time.time()
 
-        dataset_url = metadata.get("repo_url", "")
+        dataset_url = metadata["hf_metadata"].get("dataset_url", "")
         if not dataset_url:
             return MetricResult(
                 name=self.name,

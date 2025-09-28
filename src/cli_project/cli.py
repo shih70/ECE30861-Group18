@@ -17,6 +17,7 @@ from cli_project.metrics.size_score import SizeScoreMetric
 from cli_project.metrics.dataset_and_code import DatasetAndCodeMetric
 from cli_project.metrics.dataset_quality import DatasetQualityMetric
 from cli_project.metrics.code_quality import CodeQualityMetric
+from cli_project.metrics.dataset_quality import DatasetQualityMetric
 
 
 from cli_project.adapters.huggingface import fetch_repo_metadata
@@ -73,7 +74,7 @@ def score(url_file: str) -> None:
 
         if model.model_url.code:
             repo_url = model.model_url.code[0].url
-            repo_metadata = fetch_bus_factor_raw_contributors(repo_url)
+            repo_metadata = fetch_bus_factor_raw_contributors(repo_url, "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")
             repo_metadata["repo_url"] = repo_url
 
         else:
