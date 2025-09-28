@@ -10,7 +10,7 @@ Returns a score dictionary and latency in milliseconds.
 """
 
 import time
-from cli_project.metrics.base import Metric, MetricResult
+from cli_project.metrics.base import Metric, MetricResult, validate_size_score_map
 from typing import Any
 
 DEVICE_THRESHOLDS = {
@@ -25,6 +25,7 @@ class SizeScoreMetric(Metric):
     Computes per-device size scores for model reusability,
     and reports latency of score computation.
     """
+    @property
     def name(self) -> str:
         return "size_score"
 
@@ -44,6 +45,8 @@ class SizeScoreMetric(Metric):
                 score = 1.0 - (size_mb - min_mb) / (max_mb - min_mb)
         
             scores[device] = round(score, 3)
+
+        scores = validate_size_score_map(scores)
         latency = int((time.time() - t0) * 1000)
         return MetricResult(
             name=self.name,

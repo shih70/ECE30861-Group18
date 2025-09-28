@@ -82,7 +82,7 @@ def score(url_file: str) -> None:
         model.add_results(metric_results)
         # print(model.metric_scores)
         models.append(model)
-        # print(model.metric_scores["bus_factor"])
+        print(model.metric_scores["size_score"])
 
     # Encode + print as NDJSON
     NDJSONEncoder.print_records(models)
