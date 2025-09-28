@@ -15,9 +15,9 @@ Notes:
 # from .license import evaluate as eval_license
 # from .ramp_up_time import evaluate as eval_ramp_up_time
 # from .dataset_and_code import evaluate as eval_dataset_and_code
-from .dataset_quality import evaluate as eval_dataset_quality
-from .code_quality import evaluate as eval_code_quality
-from .performance_claims import evaluate as eval_performance_claims
+#from .dataset_quality import evaluate as eval_dataset_quality
+#from .code_quality import evaluate as eval_code_quality
+#from .performance_claims import evaluate as eval_performance_claims
 # from .bus_factor import evaluate as eval_bus_factor
 
 __all__ = [
@@ -25,7 +25,7 @@ __all__ = [
     "eval_license",
     "eval_ramp_up_time",
     "eval_dataset_and_code",
-    "eval_dataset_quality",
+    #"eval_dataset_quality",
     "eval_code_quality",
     "eval_performance_claims",
     "eval_bus_factor",

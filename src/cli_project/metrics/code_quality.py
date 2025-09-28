@@ -1,62 +1,70 @@
 """
-DOCTYPE: Code Quality metric for maintainability hygiene.
-This module defines CodeQualityMetric, which evaluates five lightweight quality
-signals and sums them into a [0,1] score (+0.20 each):
-(1) linter/config present, (2) type hints detected, (3) tests present,
-(4) CI workflows present, (5) any docstrings present (module/class/function).
-Signals are derived from repository structure and AST parsing. The metric
-includes a per-flag breakdown to support quick remediation.
+DOCTYPE: Code quality metric using pylint.
+This module defines CodeQualityMetric, which evaluates the maintainability and style
+of a model repository using pylint. The pylint score (0–10) is normalized to [0,1].
 """
 
-from __future__ import annotations
-from pathlib import Path
-import ast, time
+import subprocess
+import time
+from typing import Any
+from cli_project.core.entities import HFModel
+from cli_project.adapters.huggingface_inspect import clone_model_repo, clean_up_cache
 
-LINTER_FILES = [".flake8",".ruff.toml",".pylintrc","setup.cfg","pyproject.toml"]
 
-def _txt(p: Path) -> str:
-    try: return p.read_text(encoding="utf-8", errors="ignore")
-    except Exception: return ""
+class CodeQualityMetric:
+    def __init__(self):
+        self._cached_score = None
+        self._cached_latency = None
 
-def _has_linter(repo: Path) -> bool:
-    return any((repo/f).exists() for f in LINTER_FILES)
+    def name(self) -> str:
+        return "code_quality"
 
-def _has_type_hints(repo: Path) -> bool:
-    for py in repo.rglob("*.py"):
+    def evaluate(self, model: HFModel) -> float:
+        repo_path = clone_model_repo(model.repo_id)
+        if repo_path is None:
+            print("[ERROR] Repo clone failed — skipping code quality score.")
+            return 0.0
+
         try:
-            mod = ast.parse(_txt(py))
-        except Exception:
-            continue
-        for node in ast.walk(mod):
-            if isinstance(node,(ast.AnnAssign, ast.arg)) and getattr(node,"annotation",None): return True
-            if isinstance(node, ast.FunctionDef) and node.returns: return True
-    return False
+            result = subprocess.run(
+                ["pylint", repo_path, "-rn", "--score", "y", "--exit-zero"],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            output = result.stdout
+            print(f"STDOUT:\n{result.stdout}")
+            print(f"STDERR:\n{result.stderr}")
+            print(f"RETURN CODE: {result.returncode}")
 
-def _has_tests(repo: Path) -> bool:
-    return any((repo/n).exists() for n in ("tests","test","pytest.ini"))
+            # Parse final score from output (look for line with "Your code has been rated at X.XX/10")
+            for line in output.splitlines():
+                if "Your code has been rated at" in line:
+                    try:
+                        score_str = line.split("rated at")[1].split("/")[0].strip()
+                        score = float(score_str)
+                        return max(0.0, min(score / 10.0, 1.0))
+                    except ValueError:
+                        continue
 
-def _has_ci(repo: Path) -> bool:
-    wf = repo / ".github" / "workflows"
-    return wf.exists() and any(wf.glob("*.yml"))
+        except Exception as e:
+            print(f"[ERROR] Pylint execution failed: {e}")
 
-def _has_any_docstring(repo: Path) -> bool:
-    for py in repo.rglob("*.py"):
-        try:
-            mod = ast.parse(_txt(py))
-        except Exception:
-            continue
-        for node in (n for n in ast.walk(mod) if isinstance(n,(ast.Module,ast.ClassDef,ast.FunctionDef))):
-            if ast.get_docstring(node): return True
-    return False
+        finally:
+            clean_up_cache(repo_path)
 
-def evaluate(repo: Path) -> tuple[float, int]:
-    t0 = time.time()
-    flags = {
-        "linter": _has_linter(repo),
-        "type_hints": _has_type_hints(repo),
-        "tests": _has_tests(repo),
-        "ci": _has_ci(repo),
-        "docstrings": _has_any_docstring(repo),  # binary presence (rubric)
-    }
-    score = min(1.0, sum(flags.values()) * 0.20)
-    return score, int((time.time() - t0) * 1000)
+        return 0.0
+    
+    def score(self, model: HFModel) -> float:
+        if self._cached_score is None:
+            self._cached_score = self.evaluate(model)
+        return self._cached_score
+
+    def score_latency(self, model: HFModel) -> dict[str, Any]:
+        if self._cached_latency is not None:
+            return {"latency_ms": self._cached_latency}
+        
+        start = time.perf_counter()
+        self.score(model)
+        end = time.perf_counter()
+        return {"latency_ms": (end - start) * 1000}

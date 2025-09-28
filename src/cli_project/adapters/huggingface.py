@@ -1,4 +1,4 @@
-# from cli_project.urls.base import HFModelURL
+from cli_project.urls.base import HFModelURL#, classify_url
 from cli_project.core.entities import HFModel
 import requests # type: ignore
 from typing import Any
@@ -94,6 +94,15 @@ def fetch_repo_metadata(model: HFModel) -> dict[str, Any]:
             except Exception as e:
                 print(f"Error fetching README for license: {e}")
 
+        try:
+            dataset_list = data.get("datasets", [])
+            if not isinstance(dataset_list, list):
+                dataset_list = [dataset_list] if dataset_list else []
+            model.metadata["datasets"] = dataset_list
+        except Exception as e:
+            print(f"[WARN] Failed to extract dataset metadata: {e}")
+            model.metadata["datasets"] = []
+
         metadata = {
             "repo_id": model.repo_id,
             "downloads": data.get("downloads", "N/A"),
@@ -117,27 +126,26 @@ def fetch_repo_metadata(model: HFModel) -> dict[str, Any]:
 # -------------------
 
 if __name__ == "__main__":
-    # urls = [
-    #     "https://huggingface.co/google-bert/bert-base-uncased",
-    #     "https://huggingface.co/openai/whisper-tiny/tree/main"
-    # ]
+    urls = [
+        "https://huggingface.co/google-bert/bert-base-uncased",
+        "https://huggingface.co/openai/whisper-tiny/tree/main"
+    ]
 
-    # # classify URLs into UrlItem objects
-    # # items = [classify_url(u) for u in urls]
+    # classify URLs into UrlItem objects
+    items = [classify_url(u) for u in urls]
 
-    # # filter models only
-    # models = [m for m in items if isinstance(m, HFModel)]
+    # filter models only
+    models = [m for m in items if isinstance(m, HFModel)]
 
-    # for model in models:
-    #     info = fetch_repo_metadata(model)
-    #     if info:
-    #         print(f"Metadata for {info['repo_id']}:")
-    #         print(f"  Downloads: {info['downloads']}")
-    #         print(f"  Likes: {info['likes']}")
-    #         print(f"  Last Modified: {info['last_modified']}")
-    #         print(f"  Number of files: {info['num_files']}")
-    #         print(f"  License: {info['license']}")
-    #         print("-" * 40)
-    #     else:
-    #         print(f"Could not fetch metadata for {model.url}")
-    pass
+    for model in models:
+        info = fetch_repo_metadata(model)
+        if info:
+            print(f"Metadata for {info['repo_id']}:")
+            print(f"  Downloads: {info['downloads']}")
+            print(f"  Likes: {info['likes']}")
+            print(f"  Last Modified: {info['last_modified']}")
+            print(f"  Number of files: {info['num_files']}")
+            print(f"  License: {info['license']}")
+            print("-" * 40)
+        else:
+            print(f"Could not fetch metadata for {model.url}")
