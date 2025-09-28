@@ -7,7 +7,7 @@ from cli_project.metrics.base import MetricResult
 
 
 def test_license_metric() -> None:
-    metadata = {"license": "apache-2.0"}
+    metadata = {"hf_metadata":{"license": "apache-2.0"}}
     metric = LicenseMetric()
     result = metric.compute(metadata)
     assert isinstance(result, MetricResult)
@@ -17,7 +17,7 @@ def test_license_metric() -> None:
 
 
 def test_bus_factor_metric() -> None:
-    metadata = {"recent_committers": 5}
+    metadata = {"repo_metadata": {"recent_committers": 5}}
     metric = BusFactorMetric()
     result = metric.compute(metadata)
     assert isinstance(result, MetricResult)
@@ -27,7 +27,7 @@ def test_bus_factor_metric() -> None:
 
 
 def test_ramp_up_time_metric() -> None:
-    metadata = {"repo_url": "https://huggingface.co/google-bert/bert-base-uncased"}
+    metadata = {"hf_metadata":{"repo_url": "https://huggingface.co/google-bert/bert-base-uncased"}}
     metric = RampUpTimeMetric()
     result = metric.compute(metadata)
     assert isinstance(result, MetricResult)
@@ -37,7 +37,7 @@ def test_ramp_up_time_metric() -> None:
 
 
 def test_performance_claims_metric() -> None:
-    metadata = {"repo_url": "https://huggingface.co/google-bert/bert-base-uncased"}
+    metadata = {"hf_metadata":{"repo_url": "https://huggingface.co/google-bert/bert-base-uncased"}}
     metric = PerformanceClaimsMetric()
     result = metric.compute(metadata)
     assert isinstance(result, MetricResult)
