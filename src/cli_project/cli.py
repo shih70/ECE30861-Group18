@@ -63,7 +63,7 @@ def score(url_file: str) -> None:
         hf_metadata = fetch_repo_metadata(model)  # fills model.repo_id + model.metadata
         if model.model_url.code:
             repo_url = model.model_url.code[0].url
-            repo_metadata = fetch_bus_factor_raw_contributors(repo_url, "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")
+            repo_metadata = fetch_bus_factor_raw_contributors(repo_url, "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")
         else:
             repo_metadata = {}
             # repo_metadata = fetch_bus_factor_raw_contributors(model.model_url.url)

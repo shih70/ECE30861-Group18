@@ -55,7 +55,7 @@ def fetch_performance_claims_with_llm(repo_url: str) -> Dict[str, Any]:
     Use an LLM to extract numeric performance claims and compute a normalized score.
     Returns a dict: {"claims": {...}, "score": float}.
     """
-    api_key = ""
+    api_key = "sk-798d650f3cce4ea1968e9532bcc42e51"
     if not api_key:
         # Safe fallback for autograder if key isn’t injected
         return {
