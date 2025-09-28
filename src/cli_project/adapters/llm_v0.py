@@ -55,7 +55,7 @@ def fetch_performance_claims_with_llm(repo_url: str) -> Dict[str, Any]:
     Use an LLM to extract numeric performance claims and compute a normalized score.
     Returns a dict: {"claims": {...}, "score": float}.
     """
-    api_key = "sk-798d650f3cce4ea1968e9532bcc42e51"
+    api_key = ""
     if not api_key:
         # Safe fallback for autograder if key isn’t injected
         return {
@@ -129,7 +129,7 @@ def fetch_ramp_up_time_with_llm(repo_url: str) -> Dict[str, Any]:
     Use an LLM to score ramp-up time readiness based on documentation quality.
     Returns a dict with subscores and an aggregate score.
     """
-    api_key = "sk-798d650f3cce4ea1968e9532bcc42e51"
+    api_key = ""
     if not api_key:
         return {
             "doc_completeness": 0.0,
