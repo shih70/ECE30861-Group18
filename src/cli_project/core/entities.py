@@ -13,7 +13,6 @@ class HFModel():
     metadata: dict[str, Any]
     metric_scores: dict[str, MetricResult]
 
-class HFModel:
     def __init__(self, model_url: HFModelURL):
         self.model_url = model_url
         self.repo_id = self.extract_repo_id()
@@ -46,10 +45,4 @@ class HFModel:
 
     def add_results(self, metric_results: list[MetricResult]) -> None:
         self.metric_scores.update({r.name: r for r in metric_results})
-    # def to_record(self) -> dict[str, Any]:
-    #     """Return NDJSON-ready dict (with metrics only)."""
-    #     return {
-    #         "name": self.extract_model_name(),
-    #         "category": "MODEL",
-    #         # **self.metrics.to_dict(),
-    #     }
+

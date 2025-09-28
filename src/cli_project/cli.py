@@ -7,7 +7,15 @@ from cli_project import tester
 from cli_project.urls.base import parse_url_file
 from cli_project.io.ndjson import NDJSONEncoder
 from cli_project.core.entities import HFModel
-from cli_project.metrics.base import MetricResult
+from cli_project.metrics.base import Metric, MetricResult
+from cli_project.metrics.license import LicenseMetric
+from cli_project.metrics.bus_factor import BusFactorMetric
+from cli_project.metrics.performance_claims import PerformanceClaimsMetric
+from cli_project.metrics.ramp_up_time import RampUpTimeMetric
+
+
+from cli_project.adapters.huggingface import fetch_repo_metadata
+from cli_project.adapters.git_repo import fetch_bus_factor_metrics, fetch_bus_factor_raw_contributors
 
 # from cli_project.adapters.huggingface import fetch_repo_metadata
 
@@ -46,19 +54,35 @@ def score(url_file: str) -> None:
 
     url_path = Path(url_file)
     url_objs = parse_url_file(url_path)
+    # print(url_objs)
 
     models: list[HFModel] = []
     for u in url_objs:
         # wrap HFModelURL into HFModel
         model = HFModel(model_url=u)
-        
-        # attach fake results
-        fake_results = [
-            MetricResult("license", 1.0, {"normalized": "apache-2.0"}, 10),
-            MetricResult("bus_factor", 0.9, {"contributors": 3}, 20),
-        ]
-        model.add_results(fake_results)
+        hf_metadata = fetch_repo_metadata(model)  # fills model.repo_id + model.metadata
+        if model.model_url.code:
+            repo_url = model.model_url.code[0].url
+            repo_metadata = fetch_bus_factor_raw_contributors(repo_url, "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")
+        else:
+            repo_metadata = {}
+            # repo_metadata = fetch_bus_factor_raw_contributors(model.model_url.url)
+
+        model.metadata =  {"hf_metadata" : hf_metadata, "repo_metadata" : repo_metadata}
+
+        print(model.metadata["hf_metadata"].get("repo_url"))
+        metric_results: list[MetricResult] = []
+        for metric_cls in Metric.__subclasses__():
+            # print(metric_cls)
+            metric = metric_cls()
+            result = metric.compute(model.metadata)
+            metric_results.append(result)
+
+
+        model.add_results(metric_results)
+        # print(model.metric_scores)
         models.append(model)
+        # print(model.metric_scores["bus_factor"])
 
     # Encode + print as NDJSON
     NDJSONEncoder.print_records(models)

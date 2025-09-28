@@ -25,7 +25,7 @@ class BusFactorMetric(Metric):
         t0 = time.time()
 
         # Get raw number of recent committers from metadata (adapter must provide this)
-        n_committers = metadata.get("recent_committers", 0)
+        n_committers = metadata["repo_metadata"].get("recent_committers", 0)
         if not isinstance(n_committers, (int, float)):
             n_committers = 0
 
