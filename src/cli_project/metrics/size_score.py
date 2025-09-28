@@ -10,8 +10,8 @@ Returns a score dictionary and latency in milliseconds.
 """
 
 import time
-from cli_project.metrics.base import Metric
-from cli_project.core.entities import HFModel
+from cli_project.metrics.base import Metric, MetricResult
+from typing import Any
 
 DEVICE_THRESHOLDS = {
     "raspberry_pi": (50, 200),
@@ -28,13 +28,10 @@ class SizeScoreMetric(Metric):
     def name(self) -> str:
         return "size_score"
 
-    def compute(self, model: HFModel) -> tuple[dict[str, float], float]:
-        """Implements the required abstract method `compute`."""
-        return self.score(model), self.score_latency(model)["latency_seconds"]
-
-    def score(self, model: HFModel) -> dict[str, float]:
-        size_mb = model.metadata.get("size_mb", 0)
-        print(f"[DEBUG] Model size: {size_mb} MB")  # <-- ADD THIS LINE
+    def compute(self, metadata: dict[str, Any]) -> MetricResult:
+        t0 = time.time()
+        size_mb = metadata.get("size_mb", 0)
+        #print(f"[DEBUG] Model size: {size_mb} MB")  # <-- ADD THIS LINE
         scores = {}
 
 
@@ -47,12 +44,13 @@ class SizeScoreMetric(Metric):
                 score = 1.0 - (size_mb - min_mb) / (max_mb - min_mb)
         
             scores[device] = round(score, 3)
+        latency = int((time.time() - t0) * 1000)
+        return MetricResult(
+            name=self.name,
+            value=scores,
+            details={"no": "details"},
+            latency_ms=latency,
+        )
 
-        return scores
 
-    def score_latency(self, model: HFModel) -> dict[str, float]:
-        start = time.perf_counter()
-        self.score(model)
-        end = time.perf_counter()
-        return {"latency_ms": (end - start) * 1000}
 
