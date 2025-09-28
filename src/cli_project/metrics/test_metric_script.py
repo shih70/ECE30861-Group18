@@ -1,37 +1,28 @@
-from cli_project.metrics.dataset_and_code import DatasetAndCodeMetric
-from cli_project.adapters.huggingface import fetch_repo_metadata
+#!/usr/bin/env python3
+import json
+from cli_project.metrics.dataset_quality import DatasetQualityMetric
+from cli_project.metrics.base import MetricResult
 
-class FakeModel:
-    """Minimal fake model just to satisfy fetch_repo_metadata()."""
-    def __init__(self, url: str):
-        self.model_url = type("obj", (), {"url": url})
-        self.metadata = {}
-        self.repo_id = None
+# Hardcode a real Hugging Face dataset URL for testing
+TEST_DATASETS = [
+    "https://huggingface.co/datasets/openai/gdpval",
+    "https://huggingface.co/datasets/HuggingFaceFW/fineweb-2",
+    "https://huggingface.co/datasets/cnn_dailymail"
+]
 
 
-def run_test(url: str, label: str):
-    print(f"\n=== Test: {label} ===")
+def run_test():
+    metric = DatasetQualityMetric()
 
-    # Make fake model to pass into API
-    fake_model = FakeModel(url)
+    for ds_url in TEST_DATASETS:
+        metadata = {"repo_url": ds_url}
+        result: MetricResult = metric.compute(metadata)
 
-    # Fetch metadata from HF API
-    metadata = fetch_repo_metadata(fake_model)
-
-    # Add dummy counts for dataset/code URLs
-    metadata["nof_code_ds"] = {"nof_code": 0, "nof_ds": 0}
-
-    # Run metric
-    metric = DatasetAndCodeMetric()
-    result = metric.compute(metadata)
-
-    print("Repo URL:", url)
-    print("Score:", result.value)
-    print("Details:", result.details)
-    print("Latency (ms):", result.latency_ms)
+        print(f"\n=== Dataset Quality Metric: {ds_url} ===")
+        print(f"Score: {result.value}")
+        print("Details:", json.dumps(result.details, indent=2))
+        print(f"Latency (ms): {result.latency_ms}")
 
 
 if __name__ == "__main__":
-    run_test("https://huggingface.co/google-bert/bert-base-uncased", "BERT Base")
-    run_test("https://huggingface.co/openai/whisper-tiny", "Whisper Tiny")
-    run_test("https://huggingface.co/microsoft/resnet-50", "ResNet-50")
+    run_test()

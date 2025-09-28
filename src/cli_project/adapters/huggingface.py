@@ -3,28 +3,45 @@ from cli_project.core.entities import HFModel
 import requests  # type: ignore
 from typing import Any
 from urllib.parse import urlparse
-import re
 
 
 def extract_repo_id(url: str) -> str:
     """
-    Extract the repo ID (like 'google-bert/bert-base-uncased') from the HF URL.
+    Extract the repo ID (like 'google-bert/bert-base-uncased').
+    For models only.
     """
     parsed = urlparse(url)
     path_parts = parsed.path.strip("/").split("/")
 
     if len(path_parts) >= 2:
-        # The first two parts form the repo id: user_or_org/model_name
-        repo_id = f"{path_parts[0]}/{path_parts[1]}"
-        return repo_id
+        return f"{path_parts[0]}/{path_parts[1]}"
+    elif len(path_parts) == 1:
+        return path_parts[0]
     else:
         raise ValueError("URL does not contain a valid repo identifier")
+
+
+def extract_dataset_id(url: str) -> str:
+    """
+    Extract the dataset ID from a Hugging Face dataset URL.
+    Examples:
+      - https://huggingface.co/datasets/glue -> glue
+      - https://huggingface.co/datasets/HuggingFaceFW/fineweb-2 -> HuggingFaceFW/fineweb-2
+    """
+    parsed = urlparse(url)
+    path_parts = parsed.path.strip("/").split("/")
+
+    if len(path_parts) < 2 or path_parts[0] != "datasets":
+        raise ValueError("Invalid dataset URL")
+
+    if len(path_parts) == 2:
+        return path_parts[1]  # top-level dataset
+    return f"{path_parts[1]}/{path_parts[2]}"  # org/dataset
 
 
 def fetch_repo_metadata(model: HFModel) -> dict[str, Any]:
     """
     Fetch metadata for an HFModelURL instance via the Hugging Face API.
-    Stores result in model.metadata and also returns it.
     """
     try:
         model.repo_id = extract_repo_id(model.model_url.url)
@@ -33,28 +50,29 @@ def fetch_repo_metadata(model: HFModel) -> dict[str, Any]:
         return {"": None}
 
     api_url = f"https://huggingface.co/api/models/{model.repo_id}"
+    print(f"[DEBUG] Fetching model metadata from {api_url}")
 
     try:
         response = requests.get(api_url)
+        print(f"[DEBUG] Response code: {response.status_code}")
         if response.status_code != 200:
-            print(f"Failed to fetch data: HTTP {response.status_code}")
+            print(f"Failed to fetch model data: HTTP {response.status_code}")
             return {"": None}
 
         data = response.json()
+        print(f"[DEBUG] Keys in model JSON: {list(data.keys())[:10]}")
 
-        # -------------------------------
-        # License: API first, README fallback
-        # Also capture README text for performance/dataset/code metrics
-        # -------------------------------
         raw_license = data.get("license", "N/A")
-        readme_text = ""   # 👈 NEW FIELD
+        readme_text = ""
 
         readme_url = f"https://huggingface.co/{model.repo_id}/raw/main/README.md"
+        print(f"[DEBUG] Fetching model README from {readme_url}")
         try:
             resp = requests.get(readme_url, timeout=10)
+            print(f"[DEBUG] README response code: {resp.status_code}")
             if resp.status_code == 200:
                 text = resp.text
-                readme_text = text              # 👈 keep full README
+                readme_text = text
                 if raw_license == "N/A":
                     for line in text.lower().splitlines():
                         if line.startswith("license:"):
@@ -63,9 +81,6 @@ def fetch_repo_metadata(model: HFModel) -> dict[str, Any]:
         except Exception as e:
             print(f"Error fetching README: {e}")
 
-        # -------------------------------
-        # Datasets field (explicit or fallback to [])
-        # -------------------------------
         try:
             dataset_list = data.get("datasets", [])
             if not isinstance(dataset_list, list):
@@ -74,9 +89,6 @@ def fetch_repo_metadata(model: HFModel) -> dict[str, Any]:
             print(f"[WARN] Failed to extract dataset metadata: {e}")
             dataset_list = []
 
-        # -------------------------------
-        # Files field (from siblings)
-        # -------------------------------
         file_list = []
         try:
             siblings = data.get("siblings", [])
@@ -92,12 +104,12 @@ def fetch_repo_metadata(model: HFModel) -> dict[str, Any]:
             "downloads": data.get("downloads", "N/A"),
             "likes": data.get("likes", "N/A"),
             "last_modified": data.get("lastModified", "N/A"),
-            "num_files": len(data.get("siblings", [])),
+            "num_files": len(file_list),
             "license": raw_license,
             "size_mb": data.get("usedStorage", 0) / (1024 * 1024),
-            "readme_text": readme_text,   # 👈 README needed for metrics
-            "datasets": dataset_list,     # 👈 NEW
-            "files": file_list,           # 👈 NEW
+            "readme_text": readme_text,
+            "datasets": dataset_list,
+            "files": file_list,
         }
 
         model.metadata = metadata
@@ -108,18 +120,89 @@ def fetch_repo_metadata(model: HFModel) -> dict[str, Any]:
         return {"": None}
 
 
+# -------------------------------
+# NEW: Fetch dataset metadata
+# -------------------------------
+def fetch_dataset_metadata(dataset_url: str) -> dict[str, Any]:
+    """
+    Fetch metadata for a Hugging Face dataset repo.
+    """
+    try:
+        dataset_id = extract_dataset_id(dataset_url)
+    except ValueError as e:
+        print(e)
+        return {"": None}
+
+    api_url = f"https://huggingface.co/api/datasets/{dataset_id}"
+    print(f"[DEBUG] Fetching dataset metadata from {api_url}")
+
+    try:
+        response = requests.get(api_url)
+        print(f"[DEBUG] Dataset response code: {response.status_code}")
+        if response.status_code != 200:
+            print(f"Failed to fetch dataset: HTTP {response.status_code}")
+            print(f"[DEBUG] Raw text: {response.text[:500]}")
+            return {"": None}
+
+        data = response.json()
+        print(f"[DEBUG] Keys in dataset JSON: {list(data.keys())[:10]}")
+
+        raw_license = data.get("license", "unknown")
+        readme_text = ""
+
+        readme_url = f"https://huggingface.co/datasets/{dataset_id}/raw/main/README.md"
+        print(f"[DEBUG] Fetching dataset README from {readme_url}")
+        try:
+            resp = requests.get(readme_url, timeout=10)
+            print(f"[DEBUG] Dataset README response: {resp.status_code}")
+            if resp.status_code == 200:
+                readme_text = resp.text
+        except Exception as e:
+            print(f"Error fetching dataset README: {e}")
+
+        file_list = []
+        try:
+            siblings = data.get("siblings", [])
+            if isinstance(siblings, list):
+                file_list = [s.get("rfilename") for s in siblings if isinstance(s, dict) and "rfilename" in s]
+        except Exception as e:
+            print(f"[WARN] Failed to extract dataset file metadata: {e}")
+            file_list = []
+
+        metadata = {
+            "repo_url": dataset_url,
+            "repo_id": dataset_id,
+            "downloads": data.get("downloads", 0),
+            "likes": data.get("likes", 0),
+            "last_modified": data.get("lastModified", "N/A"),
+            "num_files": len(file_list),
+            "license": raw_license,
+            "size_mb": data.get("cardData", {}).get("size", 0),
+            "readme_text": readme_text,
+            "files": file_list,
+        }
+
+        return metadata
+
+    except Exception as e:
+        print(f"Error fetching dataset metadata: {e}")
+        return {"": None}
+
+
 # -------------------
 # Example usage
 # -------------------
-
 if __name__ == "__main__":
     urls = [
         "https://huggingface.co/google-bert/bert-base-uncased",
         "https://huggingface.co/openai/whisper-tiny/tree/main"
     ]
 
-    # for manual testing
     from cli_project.core.entities import HFModel
     m = HFModel(model_url=HFModelURL(urls[0]), metrics=[])
     info = fetch_repo_metadata(m)
-    print(info)
+    print("MODEL METADATA:", info)
+
+    dataset_url = "https://huggingface.co/datasets/HuggingFaceFW/fineweb-2"
+    dinfo = fetch_dataset_metadata(dataset_url)
+    print("DATASET METADATA:", dinfo)
