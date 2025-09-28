@@ -2,15 +2,20 @@ from pathlib import Path
 import sys
 import subprocess
 import json, sys, time
+from cli_project.core import log
 from cli_project import tester
 from cli_project.urls.base import parse_url_file
 from cli_project.io.ndjson import NDJSONEncoder
 from cli_project.core.entities import HFModel
 from cli_project.metrics.base import MetricResult
+
 # from cli_project.adapters.huggingface import fetch_repo_metadata
 
 def install() -> None:
     """Implements ./run install"""
+    log.setup_logging()
+    
+    log.info("installing requrements")
     py = sys.executable
     cmds = [
         [py, "-m", "pip", "install", "--user", "--upgrade", "pip", "wheel"],
@@ -20,11 +25,14 @@ def install() -> None:
         rc = subprocess.call(cmd)
         if rc != 0:
             sys.stderr.write(f"Command failed: {' '.join(cmd)} (exit {rc})\n")
+            log.error(f"Command failed: {' '.join(cmd)} (exit {rc})\n")
             sys.exit(rc)
+    log.info("requiremetns installed successfully")
     sys.exit(0)
 
 def test() -> None:
     """Implements ./run test """
+    log.setup_logging()
     rc = tester.run_tests()
 
     sys.exit(rc)
@@ -34,6 +42,8 @@ def test() -> None:
 
 def score(url_file: str) -> None:
     """Implements ./run URL_FILE"""
+    log.setup_logging()
+
     url_path = Path(url_file)
     url_objs = parse_url_file(url_path)
 
