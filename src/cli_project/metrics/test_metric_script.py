@@ -1,14 +1,16 @@
-from cli_project.metrics.bus_factor import BusFactorMetric
-from cli_project.adapters.git_repo import fetch_bus_factor_raw_contributors
+from cli_project.metrics.performance_claims import PerformanceClaimsMetric
+from cli_project.core.entities import HFModel
+
 
 if __name__ == "__main__":
-    repo_url = "https://github.com/shih70/ECE30861-Group18"  # change if needed
+    # Pick any Hugging Face repo with evaluation claims in its README
+    repo_url = "https://huggingface.co/google-bert/bert-base-uncased/tree/main"
 
-    # Step 1: fetch raw GitHub data
-    gh_data = fetch_bus_factor_raw_contributors(repo_url)
-    print("Raw GitHub data:", gh_data)
+    # Build metadata dict (LLM fetcher expects repo_url inside metadata)
+    metadata = {"repo_url": repo_url}
 
-    # Step 2: compute the metric
-    metric = BusFactorMetric()
-    result = metric.compute(gh_data)
-    print("MetricResult:", result)
+    metric = PerformanceClaimsMetric()
+    result = metric.compute(metadata)
+
+    print("\n=== Performance Claims Metric (LLM) ===")
+    print(result)
