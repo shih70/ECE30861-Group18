@@ -2,6 +2,7 @@ from pathlib import Path
 import sys
 import subprocess
 import json, sys, time
+from typing import Any
 from cli_project.core import log
 from cli_project import tester
 from cli_project.urls.base import parse_url_file
@@ -23,7 +24,7 @@ def install() -> None:
     """Implements ./run install"""
     log.setup_logging()
     
-    log.info("installing requrements")
+    log.info("installing requirements..")
     py = sys.executable
     cmds = [
         [py, "-m", "pip", "install", "--user", "--upgrade", "pip", "wheel"],
@@ -61,6 +62,10 @@ def score(url_file: str) -> None:
         # wrap HFModelURL into HFModel
         model = HFModel(model_url=u)
         hf_metadata = fetch_repo_metadata(model)  # fills model.repo_id + model.metadata
+        nof_code_ds: dict[str, Any] = dict()
+        nof_code_ds["nof_code"] = len(model.model_url.code)
+        nof_code_ds["nof_ds"] = len(model.model_url.datasets)
+
         if model.model_url.code:
             repo_url = model.model_url.code[0].url
             repo_metadata = fetch_bus_factor_raw_contributors(repo_url)
@@ -68,7 +73,7 @@ def score(url_file: str) -> None:
             repo_metadata = {}
             # repo_metadata = fetch_bus_factor_raw_contributors(model.model_url.url)
 
-        model.metadata =  {"hf_metadata" : hf_metadata, "repo_metadata" : repo_metadata}
+        model.metadata =  {"hf_metadata" : hf_metadata, "repo_metadata" : repo_metadata, "nof_code_ds" : nof_code_ds}
 
         print(model.metadata["hf_metadata"].get("repo_url"))
         metric_results: list[MetricResult] = []
