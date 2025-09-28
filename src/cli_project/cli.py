@@ -2,6 +2,7 @@ from pathlib import Path
 import sys
 import subprocess
 import json, sys, time
+from cli_project import tester
 from cli_project.urls.base import parse_url_file
 from cli_project.io.ndjson import NDJSONEncoder
 from cli_project.core.entities import HFModel
@@ -23,10 +24,13 @@ def install() -> None:
     sys.exit(0)
 
 def test() -> None:
-    """Implements ./run test (stub for now)"""
-    print("0/0 test cases passed. 0% line coverage achieved.")
+    """Implements ./run test """
+    rc = tester.run_tests()
 
-    sys.exit(1)
+    sys.exit(rc)
+    # print("0/0 test cases passed. 0% line coverage achieved.")
+
+    # sys.exit(1)
 
 def score(url_file: str) -> None:
     """Implements ./run URL_FILE"""
