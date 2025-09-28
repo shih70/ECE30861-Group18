@@ -1,16 +1,15 @@
-from cli_project.metrics.performance_claims import PerformanceClaimsMetric
-from cli_project.core.entities import HFModel
-
+from cli_project.metrics.ramp_up_time import RampUpTimeMetric
 
 if __name__ == "__main__":
-    # Pick any Hugging Face repo with evaluation claims in its README
-    repo_url = "https://huggingface.co/google-bert/bert-base-uncased/tree/main"
+    # Example repo URL to test
+    url = "https://huggingface.co/openbmb/VoxCPM-0.5B/tree/main"
 
-    # Build metadata dict (LLM fetcher expects repo_url inside metadata)
-    metadata = {"repo_url": repo_url}
+    # Build metadata dict expected by the metric
+    metadata = {"repo_url": url}
 
-    metric = PerformanceClaimsMetric()
+    # Instantiate and compute
+    metric = RampUpTimeMetric()
     result = metric.compute(metadata)
 
-    print("\n=== Performance Claims Metric (LLM) ===")
+    print("\n=== Ramp-Up Time Metric ===")
     print(result)

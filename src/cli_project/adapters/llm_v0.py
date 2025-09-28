@@ -55,13 +55,13 @@ def fetch_performance_claims_with_llm(repo_url: str) -> Dict[str, Any]:
     Use an LLM to extract numeric performance claims and compute a normalized score.
     Returns a dict: {"claims": {...}, "score": float}.
     """
-    api_key = "sk-798d650f3cce4ea1968e9532bcc42e51"
+    api_key = os.getenv("GENAI_API_KEY", "")
     if not api_key:
         # Safe fallback for autograder if key isn’t injected
         return {
             "claims": {},
             "score": 0.0,
-            "note": "GEN_AI_STUDIO_API_KEY not set"
+            "note": "GENAI_API_KEY not set"
         }
 
     readme_text = fetch_repo_readme(repo_url)
@@ -97,7 +97,6 @@ def fetch_performance_claims_with_llm(repo_url: str) -> Dict[str, Any]:
                     "Now return the JSON.\n\n"
                     + clean_readme
                 )
-
             }
         ]
     }
@@ -125,10 +124,115 @@ def fetch_performance_claims_with_llm(repo_url: str) -> Dict[str, Any]:
         return {"claims": {}, "score": 0.0, "note": "Failed to parse LLM output"}
 
 
+def fetch_ramp_up_time_with_llm(repo_url: str) -> Dict[str, Any]:
+    """
+    Use an LLM to score ramp-up time readiness based on documentation quality.
+    Returns a dict with subscores and an aggregate score.
+    """
+    api_key = "sk-798d650f3cce4ea1968e9532bcc42e51"
+    if not api_key:
+        return {
+            "doc_completeness": 0.0,
+            "installability": 0.0,
+            "quickstart": 0.0,
+            "config_clarity": 0.0,
+            "troubleshooting": 0.0,
+            "justification": "GENAI_API_KEY not set",
+            "score": 0.0,
+        }
+
+    readme_text = fetch_repo_readme(repo_url)
+    if not readme_text:
+        return {
+            "doc_completeness": 0.0,
+            "installability": 0.0,
+            "quickstart": 0.0,
+            "config_clarity": 0.0,
+            "troubleshooting": 0.0,
+            "justification": "README not found",
+            "score": 0.0,
+        }
+
+    clean_readme = strip_hf_metadata(readme_text)
+
+    url = "https://genai.rcac.purdue.edu/api/chat/completions"
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json"
+    }
+    body = {
+        "model": "llama4:latest",
+        "messages": [
+            {
+                "role": "user",
+                "content": (
+                    "You are a strict JSON generator. "
+                    "Read the following README and rate its ramp-up readiness. "
+                    "Return ONLY valid JSON with this schema:\n"
+                    "{\n"
+                    "  \"doc_completeness\": float (0–1),\n"
+                    "  \"installability\": float (0–1),\n"
+                    "  \"quickstart\": float (0–1),\n"
+                    "  \"config_clarity\": float (0–1),\n"
+                    "  \"troubleshooting\": float (0–1),\n"
+                    "  \"justification\": \"1–3 short bullet points\",\n"
+                    "  \"score\": float (0–1)\n"
+                    "}\n\n"
+                    "Guidelines:\n"
+                    "- doc_completeness: structure, prerequisites, clarity.\n"
+                    "- installability: clear pip/conda commands, dependencies.\n"
+                    "- quickstart: runnable example code.\n"
+                    "- config_clarity: explanation of config files/params.\n"
+                    "- troubleshooting: known issues, limitations, FAQs.\n\n"
+                    "README:\n\n"
+                    + clean_readme
+                )
+            }
+        ]
+    }
+
+    response = requests.post(url, headers=headers, json=body)
+    if response.status_code != 200:
+        return {
+            "doc_completeness": 0.0,
+            "installability": 0.0,
+            "quickstart": 0.0,
+            "config_clarity": 0.0,
+            "troubleshooting": 0.0,
+            "justification": f"LLM API error {response.status_code}",
+            "score": 0.0,
+        }
+
+    result = response.json()
+    try:
+        content = result["choices"][0]["message"]["content"].strip()
+
+        # Strip Markdown fences if LLM added them
+        if content.startswith("```"):
+            content = re.sub(r"^```[a-zA-Z]*\n", "", content)
+            content = content.strip("`").strip()
+
+        parsed = json.loads(content)
+        return parsed
+    except Exception:
+        return {
+            "doc_completeness": 0.0,
+            "installability": 0.0,
+            "quickstart": 0.0,
+            "config_clarity": 0.0,
+            "troubleshooting": 0.0,
+            "justification": "Failed to parse LLM output",
+            "score": 0.0,
+        }
+
+
 # -------------------
 # Example usage
 # -------------------
 if __name__ == "__main__":
     repo_url = "https://huggingface.co/openai/whisper-tiny/tree/main"
-    output = fetch_performance_claims_with_llm(repo_url)
-    print("LLM Performance Claims Output:\n", json.dumps(output, indent=2))
+    perf_output = fetch_performance_claims_with_llm(repo_url)
+    print("LLM Performance Claims Output:\n", json.dumps(perf_output, indent=2))
+
+    ramp_output = fetch_ramp_up_time_with_llm(repo_url)
+    print("\nLLM Ramp-Up Time Output:\n", json.dumps(ramp_output, indent=2))
