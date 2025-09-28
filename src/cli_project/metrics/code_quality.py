@@ -1,70 +1,91 @@
-"""
-DOCTYPE: Code quality metric using pylint.
-This module defines CodeQualityMetric, which evaluates the maintainability and style
-of a model repository using pylint. The pylint score (0–10) is normalized to [0,1].
-"""
-
-import subprocess
 import time
-from typing import Any
-from cli_project.core.entities import HFModel
+from typing import Any, Dict
+from cli_project.metrics.base import MetricResult
 from cli_project.adapters.huggingface_inspect import clone_model_repo, clean_up_cache
 
-
 class CodeQualityMetric:
-    def __init__(self):
-        self._cached_score = None
-        self._cached_latency = None
+    """
+    Computes code quality for Hugging Face model repos based on heuristics:
+      - Presence of README.md
+      - Presence of config.json
+      - Presence of .py files (esp. train.py / run.py)
+      - Project cleanliness (few junk files)
+    """
 
     def name(self) -> str:
         return "code_quality"
 
-    def evaluate(self, model: HFModel) -> float:
-        repo_path = clone_model_repo(model.repo_id)
-        if repo_path is None:
-            print("[ERROR] Repo clone failed — skipping code quality score.")
-            return 0.0
+    def compute(self, metadata: Dict[str, Any]) -> MetricResult:
+        t0 = time.time()
+        model_id = metadata.get("repo_id", None)
+        if not model_id:
+            return MetricResult(
+                name=self.name(),
+                value=0.0,
+                details={"error": "No model ID found in metadata"},
+                latency_ms=0
+            )
+
+        # Clone and inspect repo
+        model_path = clone_model_repo(model_id)
+        score_components = {
+            "readme_score": 0.0,
+            "config_score": 0.0,
+            "training_script_score": 0.0,
+            "python_file_score": 0.0,
+            "structure_score": 0.0,
+        }
 
         try:
-            result = subprocess.run(
-                ["pylint", repo_path, "-rn", "--score", "y", "--exit-zero"],
-                capture_output=True,
-                text=True,
-                check=False,
+            # 1. README Score
+            readme_path = model_path / "README.md"
+            if readme_path.exists():
+                readme_len = len(readme_path.read_text(encoding="utf-8"))
+                score_components["readme_score"] = min(1.0, readme_len / 500.0)  # 500+ chars = 1.0
+
+            # 2. Config Score
+            config_path = model_path / "config.json"
+            if config_path.exists():
+                score_components["config_score"] = 1.0
+
+            # 3. Training Script Score
+            for filename in ["train.py", "run.py", "finetune.py"]:
+                if (model_path / filename).exists():
+                    score_components["training_script_score"] = 1.0
+                    break
+
+            # 4. Python Files Score
+            py_files = list(model_path.rglob("*.py"))
+            score_components["python_file_score"] = min(1.0, len(py_files) / 5.0)  # 5+ files → 1.0
+
+            # 5. Structure Score: penalize if too many random files (>20 files)
+            all_files = list(model_path.rglob("*"))
+            file_count = len([f for f in all_files if f.is_file()])
+            if file_count <= 20:
+                score_components["structure_score"] = 1.0
+            elif file_count <= 50:
+                score_components["structure_score"] = 0.5
+            else:
+                score_components["structure_score"] = 0.0
+
+            # Final quality = weighted average
+            weights = {
+                "readme_score": 0.25,
+                "config_score": 0.2,
+                "training_script_score": 0.2,
+                "python_file_score": 0.2,
+                "structure_score": 0.15,
+            }
+
+            quality = sum(weights[k] * score_components[k] for k in score_components)
+
+            latency = int((time.time() - t0) * 1000)
+            return MetricResult(
+                name=self.name(),
+                value=round(quality, 3),
+                details={k: round(v, 3) for k, v in score_components.items()},
+                latency_ms=latency
             )
-            output = result.stdout
-            print(f"STDOUT:\n{result.stdout}")
-            print(f"STDERR:\n{result.stderr}")
-            print(f"RETURN CODE: {result.returncode}")
-
-            # Parse final score from output (look for line with "Your code has been rated at X.XX/10")
-            for line in output.splitlines():
-                if "Your code has been rated at" in line:
-                    try:
-                        score_str = line.split("rated at")[1].split("/")[0].strip()
-                        score = float(score_str)
-                        return max(0.0, min(score / 10.0, 1.0))
-                    except ValueError:
-                        continue
-
-        except Exception as e:
-            print(f"[ERROR] Pylint execution failed: {e}")
 
         finally:
-            clean_up_cache(repo_path)
-
-        return 0.0
-    
-    def score(self, model: HFModel) -> float:
-        if self._cached_score is None:
-            self._cached_score = self.evaluate(model)
-        return self._cached_score
-
-    def score_latency(self, model: HFModel) -> dict[str, Any]:
-        if self._cached_latency is not None:
-            return {"latency_ms": self._cached_latency}
-        
-        start = time.perf_counter()
-        self.score(model)
-        end = time.perf_counter()
-        return {"latency_ms": (end - start) * 1000}
+            clean_up_cache(model_path)
