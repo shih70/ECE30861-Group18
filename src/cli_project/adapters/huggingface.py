@@ -1,9 +1,10 @@
-from cli_project.urls.base import HFModelURL#, classify_url
+from cli_project.urls.base import HFModelURL  # , classify_url
 from cli_project.core.entities import HFModel
-import requests # type: ignore
+import requests  # type: ignore
 from typing import Any
 from urllib.parse import urlparse
 import re
+
 
 def extract_repo_id(url: str) -> str:
     """
@@ -43,7 +44,7 @@ def fetch_repo_metadata(model: HFModel) -> dict[str, Any]:
 
         # -------------------------------
         # License: API first, README fallback
-        # Also capture README text for performance metric
+        # Also capture README text for performance/dataset/code metrics
         # -------------------------------
         raw_license = data.get("license", "N/A")
         readme_text = ""   # 👈 NEW FIELD
@@ -62,14 +63,28 @@ def fetch_repo_metadata(model: HFModel) -> dict[str, Any]:
         except Exception as e:
             print(f"Error fetching README: {e}")
 
+        # -------------------------------
+        # Datasets field (explicit or fallback to [])
+        # -------------------------------
         try:
             dataset_list = data.get("datasets", [])
             if not isinstance(dataset_list, list):
                 dataset_list = [dataset_list] if dataset_list else []
-            model.metadata["datasets"] = dataset_list
         except Exception as e:
             print(f"[WARN] Failed to extract dataset metadata: {e}")
-            model.metadata["datasets"] = []
+            dataset_list = []
+
+        # -------------------------------
+        # Files field (from siblings)
+        # -------------------------------
+        file_list = []
+        try:
+            siblings = data.get("siblings", [])
+            if isinstance(siblings, list):
+                file_list = [s.get("rfilename") for s in siblings if isinstance(s, dict) and "rfilename" in s]
+        except Exception as e:
+            print(f"[WARN] Failed to extract file metadata: {e}")
+            file_list = []
 
         metadata = {
             "repo_url": model.model_url.url,
@@ -80,12 +95,14 @@ def fetch_repo_metadata(model: HFModel) -> dict[str, Any]:
             "num_files": len(data.get("siblings", [])),
             "license": raw_license,
             "size_mb": data.get("usedStorage", 0) / (1024 * 1024),
-            "readme_text": readme_text,   # 👈 NEW FIELD
+            "readme_text": readme_text,   # 👈 README needed for metrics
+            "datasets": dataset_list,     # 👈 NEW
+            "files": file_list,           # 👈 NEW
         }
 
         model.metadata = metadata
         return metadata
-    
+
     except Exception as e:
         print(f"Error fetching repo metadata: {e}")
         return {"": None}
@@ -101,21 +118,8 @@ if __name__ == "__main__":
         "https://huggingface.co/openai/whisper-tiny/tree/main"
     ]
 
-    # # classify URLs into UrlItem objects
-    # items = [classify_url(u) for u in urls]
-
-    # # filter models only
-    # models = [m for m in items if isinstance(m, HFModel)]
-
-    # for model in models:
-    #     info = fetch_repo_metadata(model)
-    #     if info:
-    #         print(f"Metadata for {info['repo_id']}:")
-    #         print(f"  Downloads: {info['downloads']}")
-    #         print(f"  Likes: {info['likes']}")
-    #         print(f"  Last Modified: {info['last_modified']}")
-    #         print(f"  Number of files: {info['num_files']}")
-    #         print(f"  License: {info['license']}")
-    #         print("-" * 40)
-    #     else:
-    #         print(f"Could not fetch metadata for {model.url}")
+    # for manual testing
+    from cli_project.core.entities import HFModel
+    m = HFModel(model_url=HFModelURL(urls[0]), metrics=[])
+    info = fetch_repo_metadata(m)
+    print(info)
