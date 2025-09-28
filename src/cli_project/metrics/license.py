@@ -59,7 +59,8 @@ class LicenseMetric(Metric):
         """
         t0 = time.time()
 
-        raw_license = metadata.get("license")
+        raw_license = metadata["hf_metadata"].get("license")
+        # raw_license = metadata[metadata["hf_metadata"]]
         lic_norm = _norm(raw_license)
 
         score = 1.0 if lic_norm in ALLOWED else 0.0

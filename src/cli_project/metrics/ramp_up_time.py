@@ -25,7 +25,7 @@ class RampUpTimeMetric(Metric):
     def compute(self, metadata: dict[str, Any]) -> MetricResult:
         t0 = time.time()
 
-        repo_url = metadata.get("repo_url")
+        repo_url = metadata["hf_metadata"].get("repo_url")
         if not repo_url:
             return MetricResult(
                 name=self.name,

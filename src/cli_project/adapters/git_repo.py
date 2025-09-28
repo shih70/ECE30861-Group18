@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from typing import Any, Dict, Optional
 
 
-def fetch_bus_factor_metrics(repo_url, days=365):
+def fetch_bus_factor_metrics(repo_url: str, days: int=365) -> dict[str, Any]:
     # Extract the owner and repository name from the GitHub URL
     repo_url = repo_url.rstrip('/')
     owner, repo = repo_url.split('/')[-2], repo_url.split('/')[-1]
@@ -17,7 +17,8 @@ def fetch_bus_factor_metrics(repo_url, days=365):
 
     # Fetch commit data from the GitHub API (using pagination for large repos)
     committers = set()
-    commit_count_by_committer = Counter()
+    # commit_count_by_committer = Counter()
+    commit_count_by_committer: Counter[str] = Counter()
     page = 1
 
     while True:

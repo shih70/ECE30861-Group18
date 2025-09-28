@@ -20,7 +20,7 @@ def extract_repo_id(url: str) -> str:
         raise ValueError("URL does not contain a valid repo identifier")
 
 
-def fetch_repo_readme(repo_url: str) -> str:
+def fetch_repo_readme(repo_url: str) -> Any:
     """
     Fetch the raw README text from a Hugging Face repo.
     """
@@ -55,7 +55,7 @@ def fetch_performance_claims_with_llm(repo_url: str) -> Dict[str, Any]:
     Use an LLM to extract numeric performance claims and compute a normalized score.
     Returns a dict: {"claims": {...}, "score": float}.
     """
-    api_key = os.getenv("GENAI_API_KEY", "")
+    api_key = "sk-798d650f3cce4ea1968e9532bcc42e51"
     if not api_key:
         # Safe fallback for autograder if key isn’t injected
         return {

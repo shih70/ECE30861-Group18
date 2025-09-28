@@ -5,42 +5,6 @@ from typing import Any
 from urllib.parse import urlparse
 import re
 
-
-# def fetch_repo_metadata(model: HFModelURL) -> dict[str, Any]:
-#     """
-#     Fetch metadata for an HFModelURL instance via the Hugging Face API.
-#     Stores result in model.metadata and also returns it.
-#     """
-#     try:
-#         repo_id = model.repo_id   # uses HFModelURL property
-#     except ValueError as e:
-#         print(e)
-#         return None
-#
-#     api_url = f"https://huggingface.co/api/models/{repo_id}"
-#
-#     try:
-#         response = requests.get(api_url)
-#         if response.status_code != 200:
-#             print(f"Failed to fetch data: HTTP {response.status_code}")
-#             return None
-#
-#         data = response.json()
-#
-#         metadata = {
-#             "repo_id": repo_id,
-#             "downloads": data.get("downloads", "N/A"),
-#             "likes": data.get("likes", "N/A"),
-#             "last_modified": data.get("lastModified", "N/A"),
-#             "num_files": len(data.get("siblings", []))
-#         }
-#
-#         model.metadata = metadata
-#         return metadata
-#
-#     except Exception as e:
-#         print(f"Error fetching repo metadata: {e}")
-#         return None
 def extract_repo_id(url: str) -> str:
     """
     Extract the repo ID (like 'google-bert/bert-base-uncased') from the HF URL.
@@ -108,6 +72,7 @@ def fetch_repo_metadata(model: HFModel) -> dict[str, Any]:
             model.metadata["datasets"] = []
 
         metadata = {
+            "repo_url": model.model_url.url,
             "repo_id": model.repo_id,
             "downloads": data.get("downloads", "N/A"),
             "likes": data.get("likes", "N/A"),

@@ -55,7 +55,7 @@ class Metric(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def compute(self, url: str) -> MetricResult:
+    def compute(self, metadata: dict[str, Any]) -> MetricResult:
         """Compute this metric for the given Hugging Face model URL."""
         raise NotImplementedError
 
