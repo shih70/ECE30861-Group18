@@ -17,7 +17,7 @@ class CodeQualityMetric:
 
     def compute(self, metadata: Dict[str, Any]) -> MetricResult:
         t0 = time.time()
-        model_id = metadata.get("repo_id", None)
+        model_id = metadata["hf"].get("repo_id", None)
         if not model_id:
             return MetricResult(
                 name=self.name(),

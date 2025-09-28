@@ -14,9 +14,14 @@ from cli_project.metrics.bus_factor import BusFactorMetric
 from cli_project.metrics.performance_claims import PerformanceClaimsMetric
 from cli_project.metrics.ramp_up_time import RampUpTimeMetric
 from cli_project.metrics.size_score import SizeScoreMetric
+from cli_project.metrics.dataset_and_code import DatasetAndCodeMetric
+from cli_project.metrics.dataset_quality import DatasetQualityMetric
+from cli_project.metrics.code_quality import CodeQualityMetric
+
 
 from cli_project.adapters.huggingface import fetch_repo_metadata
 from cli_project.adapters.git_repo import fetch_bus_factor_metrics, fetch_bus_factor_raw_contributors
+
 
 # from cli_project.adapters.huggingface import fetch_repo_metadata
 
@@ -69,8 +74,15 @@ def score(url_file: str) -> None:
         if model.model_url.code:
             repo_url = model.model_url.code[0].url
             repo_metadata = fetch_bus_factor_raw_contributors(repo_url)
+            repo_metadata["repo_url"] = repo_url
+
         else:
             repo_metadata = {}
+
+        if model.model_url.datasets:
+            dataset_url = model.model_url.datasets[0].url
+            hf_metadata["dataset_url"] = dataset_url
+
             # repo_metadata = fetch_bus_factor_raw_contributors(model.model_url.url)
 
         model.metadata =  {"hf_metadata" : hf_metadata, "repo_metadata" : repo_metadata, "nof_code_ds" : nof_code_ds}
