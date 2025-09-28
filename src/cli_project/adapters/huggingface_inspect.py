@@ -4,12 +4,13 @@ import json
 import shutil
 from transformers import AutoTokenizer
 from pathlib import Path
+from typing import Any
 
 # Cache directory where models will be stored
 CACHE_DIR = Path("src/cli_project/adapters/cache")
 
 # Function to clone the Hugging Face model repo into the cache directory
-def clone_model_repo(model_id: str, cache_dir: Path = CACHE_DIR):
+def clone_model_repo(model_id: str, cache_dir: Path = CACHE_DIR) -> Path:
     """
     Clone a Hugging Face model repo into the cache directory.
     
@@ -22,17 +23,15 @@ def clone_model_repo(model_id: str, cache_dir: Path = CACHE_DIR):
     """
     model_dir = cache_dir / model_id
     if not model_dir.exists():
-        print(f"Cloning model {model_id}...")
+        # print(f"Cloning model {model_id}...")
         # Clone the model repo into the cache directory
         repo_url = f"https://huggingface.co/{model_id}"
         git.Repo.clone_from(repo_url, model_dir)
-    else:
-        print(f"Model {model_id} already cached at {model_dir}.")
     
     return model_dir
 
 # Function to inspect config and other model files
-def inspect_model_files(model_dir: Path):
+def inspect_model_files(model_dir: Path) -> dict[str, Any]:
     """
     Inspect the model files in the cloned directory and parse config.json and metadata.
     
@@ -78,7 +77,7 @@ def inspect_model_files(model_dir: Path):
     return metadata
 
 # Function to clean up the cached model repo (delete the cache)
-def clean_up_cache(model_dir: Path):
+def clean_up_cache(model_dir: Path) -> None:
     """
     Clean up the cached model repo by deleting its directory.
     
@@ -86,13 +85,12 @@ def clean_up_cache(model_dir: Path):
     - model_dir (Path): The directory where the model repo is cached.
     """
     if model_dir.exists():
-        print(f"Deleting cached model at {model_dir}...")
+        # print(f"Deleting cached model at {model_dir}...")
         shutil.rmtree(model_dir)
-    else:
-        print(f"No cached model found at {model_dir}.")
+
 
 # Example of using the above functions
-def analyze_huggingface_model(model_id: str):
+def analyze_huggingface_model(model_id: str) -> dict[str, Any]:
     """
     Full analysis pipeline for Hugging Face model.
     
@@ -113,7 +111,7 @@ def analyze_huggingface_model(model_id: str):
     
     return model_metadata
 
-# Example usage:
-model_id = "bert-base-uncased"  # You can replace this with any Hugging Face model ID
-metadata = analyze_huggingface_model(model_id)
-print(json.dumps(metadata, indent=4))
+# # Example usage:
+# model_id = "bert-base-uncased"  # You can replace this with any Hugging Face model ID
+# metadata = analyze_huggingface_model(model_id)
+# print(json.dumps(metadata, indent=4))

@@ -18,10 +18,28 @@ class NDJSONEncoder:
             record[f"{r.name}_latency"] = r.latency_ms
 
         if "net_score" not in record and model.metric_scores:
-            vals = [r.value for r in model.metric_scores.values() if isinstance(r.value, (int, float))]
-            record["net_score"] = round(sum(vals) / len(vals), 2) if vals else 0.0
-            record["net_score_latency"] = sum(r.latency_ms for r in model.metric_scores.values())
+            # Define weights for each metric
+            weights = {
+                "license": 0.20,
+                "code_quality": 0.18,
+                "dataset_quality": 0.15,
+                "ramp_up_time": 0.15,
+                "dataset_and_code_score": 0.12,
+                "bus_factor": 0.10,
+                "performance_claims": 0.07,
+                "size": 0.03,
+            }
 
+            # Compute weighted score
+            net_score = 0.0
+            for metric, weight in weights.items():
+                if metric in model.metric_scores and isinstance(model.metric_scores[metric].value, (int, float)):
+                    net_score += model.metric_scores[metric].value * weight
+
+            record["net_score"] = round(net_score, 2)
+
+            # Net score latency = sum of latencies
+            record["net_score_latency"] = sum(r.latency_ms for r in model.metric_scores.values())
         return json.dumps(record)
 
     @staticmethod

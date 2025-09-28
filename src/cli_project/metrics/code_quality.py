@@ -1,9 +1,9 @@
 import time
 from typing import Any, Dict
-from cli_project.metrics.base import MetricResult
+from cli_project.metrics.base import MetricResult, Metric
 from cli_project.adapters.huggingface_inspect import clone_model_repo, clean_up_cache
 
-class CodeQualityMetric:
+class CodeQualityMetric(Metric):
     """
     Computes code quality for Hugging Face model repos based on heuristics:
       - Presence of README.md
@@ -11,16 +11,16 @@ class CodeQualityMetric:
       - Presence of .py files (esp. train.py / run.py)
       - Project cleanliness (few junk files)
     """
-
+    @property
     def name(self) -> str:
         return "code_quality"
 
     def compute(self, metadata: Dict[str, Any]) -> MetricResult:
         t0 = time.time()
-        model_id = metadata["hf"].get("repo_id", None)
+        model_id = metadata["hf_metadata"].get("repo_id", None)
         if not model_id:
             return MetricResult(
-                name=self.name(),
+                name=self.name,
                 value=0.0,
                 details={"error": "No model ID found in metadata"},
                 latency_ms=0
@@ -81,7 +81,7 @@ class CodeQualityMetric:
 
             latency = int((time.time() - t0) * 1000)
             return MetricResult(
-                name=self.name(),
+                name=self.name,
                 value=round(quality, 3),
                 details={k: round(v, 3) for k, v in score_components.items()},
                 latency_ms=latency

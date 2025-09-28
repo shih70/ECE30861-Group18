@@ -129,7 +129,7 @@ def fetch_ramp_up_time_with_llm(repo_url: str) -> Dict[str, Any]:
     Use an LLM to score ramp-up time readiness based on documentation quality.
     Returns a dict with subscores and an aggregate score.
     """
-    api_key = ""
+    api_key = "sk-798d650f3cce4ea1968e9532bcc42e51"
     if not api_key:
         return {
             "doc_completeness": 0.0,

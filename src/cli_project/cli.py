@@ -87,7 +87,7 @@ def score(url_file: str) -> None:
 
         model.metadata =  {"hf_metadata" : hf_metadata, "repo_metadata" : repo_metadata, "nof_code_ds" : nof_code_ds}
 
-        print(model.metadata["hf_metadata"].get("repo_url"))
+        # print(model.metadata["hf_metadata"].get("repo_url"))
         metric_results: list[MetricResult] = []
         for metric_cls in Metric.__subclasses__():
             # print(metric_cls)
@@ -99,7 +99,7 @@ def score(url_file: str) -> None:
         model.add_results(metric_results)
         # print(model.metric_scores)
         models.append(model)
-        print(model.metric_scores["size_score"])
+        # print(model.metric_scores["size_score"])
 
     # Encode + print as NDJSON
     NDJSONEncoder.print_records(models)
