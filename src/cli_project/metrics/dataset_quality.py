@@ -1,3 +1,11 @@
+DOCTYPE: Dataset Quality metric (popularity, documentation, and licensing).
+
+This metric evaluates the quality of a dataset hosted on Hugging Face using 
+metadata such as downloads, likes, file count, dataset size, readme coverage, 
+and license presence. It aggregates these signals with weighted scores to produce 
+a final value in [0,1], where higher scores reflect better-documented, more 
+popular, and more usable datasets.
+
 from typing import Any
 import time
 from cli_project.metrics.base import Metric, MetricResult
