@@ -11,19 +11,43 @@ if SRC.exists():
 else:
     sys.path.insert(0, str(ROOT / "cli_project"))
 
-from cli_project import cli
+# from cli_project import cli
+import subprocess
+
+def install() -> None:
+    """Implements ./run install"""
+    # log.setup_logging()
+    
+    # log.info("installing requirements..")
+    print("installing requirements..")
+    py = sys.executable
+    cmds = [
+        [py, "-m", "pip", "install", "--upgrade", "pip", "wheel"],
+        [py, "-m", "pip", "install", "-r", "requirements.txt"],
+    ]
+    for cmd in cmds:
+        rc = subprocess.call(cmd)
+        if rc != 0:
+            sys.stderr.write(f"Command failed: {' '.join(cmd)} (exit {rc})\n")
+            # log.error(f"Command failed: {' '.join(cmd)} (exit {rc})\n")
+            sys.exit(rc)
+    # log.info("requiremetns installed successfully")
+    sys.exit(0)
 
 def main() -> None:
+    
     if len(sys.argv) < 2:
         print("Usage: ./run [install|test|URL_FILE]", file=sys.stderr)
         sys.exit(1)
 
     arg = sys.argv[1]
     if arg == "install":
-        cli.install()
+        install()
     elif arg == "test":
+        from cli_project import cli
         cli.test()
     else:
+        from cli_project import cli
         cli.score(arg)
 
 if __name__ == "__main__":

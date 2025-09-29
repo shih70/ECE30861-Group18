@@ -1,12 +1,16 @@
 import concurrent.futures
 import time
 from typing import List, Any
-
 from cli_project.metrics.base import Metric, MetricResult
 
-def compute_all_metrics(context: dict[str, Any], metrics: List[Metric], max_workers: int | None = None) -> List[MetricResult]:
+def compute_all_metrics(
+    context: dict[str, Any],
+    metrics: List[Metric],
+    max_workers: int | None = None
+) -> List[MetricResult]:
     """
     Compute all metrics for a given Hugging Face model metadata in parallel.
+    Each metric runs in its own thread, results collected as MetricResult.
     """
     results: List[MetricResult] = []
 
@@ -14,6 +18,7 @@ def compute_all_metrics(context: dict[str, Any], metrics: List[Metric], max_work
         t0 = time.perf_counter()
         result = metric.compute(context)
         latency = int((time.perf_counter() - t0) * 1000)
+        # Preserve original details but override latency
         return MetricResult(
             name=result.name,
             value=result.value,
@@ -22,8 +27,17 @@ def compute_all_metrics(context: dict[str, Any], metrics: List[Metric], max_work
         )
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
-        futures = [executor.submit(timed_compute, m) for m in metrics]
+        futures = {executor.submit(timed_compute, m): m for m in metrics}
         for f in concurrent.futures.as_completed(futures):
-            results.append(f.result())
+            try:
+                results.append(f.result())
+            except Exception as e:
+                # Handle crashes gracefully
+                results.append(MetricResult(
+                    name=futures[f].name(),
+                    value=0.0,
+                    details={"error": str(e)},
+                    latency_ms=0,
+                ))
 
     return results

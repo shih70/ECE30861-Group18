@@ -26,24 +26,25 @@ from cli_project.adapters.git_repo import fetch_bus_factor_metrics, fetch_bus_fa
 
 # from cli_project.adapters.huggingface import fetch_repo_metadata
 
-def install() -> None:
-    """Implements ./run install"""
-    log.setup_logging()
+# def install() -> None:
+#     """Implements ./run install"""
+#     # log.setup_logging()
     
-    log.info("installing requirements..")
-    py = sys.executable
-    cmds = [
-        [py, "-m", "pip", "install", "--user", "--upgrade", "pip", "wheel"],
-        [py, "-m", "pip", "install", "--user", "-r", "requirements.txt"],
-    ]
-    for cmd in cmds:
-        rc = subprocess.call(cmd)
-        if rc != 0:
-            sys.stderr.write(f"Command failed: {' '.join(cmd)} (exit {rc})\n")
-            log.error(f"Command failed: {' '.join(cmd)} (exit {rc})\n")
-            sys.exit(rc)
-    log.info("requiremetns installed successfully")
-    sys.exit(0)
+#     # log.info("installing requirements..")
+#     print("installing requirements..")
+#     py = sys.executable
+#     cmds = [
+#         [py, "-m", "pip", "install", "--user", "--upgrade", "pip", "wheel"],
+#         [py, "-m", "pip", "install", "--user", "-r", "requirements.txt"],
+#     ]
+#     for cmd in cmds:
+#         rc = subprocess.call(cmd)
+#         if rc != 0:
+#             sys.stderr.write(f"Command failed: {' '.join(cmd)} (exit {rc})\n")
+#             log.error(f"Command failed: {' '.join(cmd)} (exit {rc})\n")
+#             sys.exit(rc)
+#     # log.info("requiremetns installed successfully")
+#     sys.exit(0)
 
 def test() -> None:
     """Implements ./run test """
@@ -84,14 +85,11 @@ def score(url_file: str) -> None:
             dataset_url = model.model_url.datasets[0].url
             hf_metadata["dataset_url"] = dataset_url
 
-            # repo_metadata = fetch_bus_factor_raw_contributors(model.model_url.url)
-
         model.metadata =  {"hf_metadata" : hf_metadata, "repo_metadata" : repo_metadata, "nof_code_ds" : nof_code_ds}
 
         # print(model.metadata["hf_metadata"].get("repo_url"))
         metric_results: list[MetricResult] = []
         for metric_cls in Metric.__subclasses__():
-            # print(metric_cls)
             metric = metric_cls()
             result = metric.compute(model.metadata)
             metric_results.append(result)
