@@ -3,7 +3,13 @@ import sys
 from pathlib import Path
 
 # add src/ to sys.path so cli_project can be imported
-sys.path.insert(0, str(Path(__file__).resolve().parent / "src"))
+# sys.path.insert(0, str(Path(__file__).resolve().parent / "src"))
+ROOT = Path(__file__).resolve().parent
+SRC = ROOT / "src"
+if SRC.exists():
+    sys.path.insert(0, str(SRC))
+else:
+    sys.path.insert(0, str(ROOT / "cli_project"))
 
 from cli_project import cli
 
