@@ -1,3 +1,11 @@
+DOCTYPE: Code Quality metric (readability, structure, and maintainability).
+
+This metric inspects Hugging Face model repositories for indicators of good 
+software practices, including the presence of a README, config files, training 
+scripts, sufficient Python source files, and a clean project structure. It 
+aggregates these signals with weighted scores into a final value in [0,1], where 
+higher scores reflect better-documented, more maintainable codebases.
+
 import time
 from typing import Any, Dict
 from cli_project.metrics.base import MetricResult, Metric
