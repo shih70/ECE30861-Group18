@@ -27,23 +27,26 @@ from cli_project.adapters.git_repo import fetch_bus_factor_metrics, fetch_bus_fa
 # from cli_project.adapters.huggingface import fetch_repo_metadata
 
 def install() -> None:
-    """Implements ./run install"""
-    log.setup_logging()
-    
-    log.info("installing requirements..")
-    py = sys.executable
-    cmds = [
-        [py, "-m", "pip", "install", "--user", "--upgrade", "pip", "wheel"],
-        [py, "-m", "pip", "install", "--user", "-r", "requirements.txt"],
-    ]
-    for cmd in cmds:
-        rc = subprocess.call(cmd)
-        if rc != 0:
-            sys.stderr.write(f"Command failed: {' '.join(cmd)} (exit {rc})\n")
-            log.error(f"Command failed: {' '.join(cmd)} (exit {rc})\n")
-            sys.exit(rc)
-    log.info("requiremetns installed successfully")
+
     sys.exit(0)
+# def install() -> None:
+#     """Implements ./run install"""
+#     log.setup_logging()
+    
+#     log.info("installing requirements..")
+#     py = sys.executable
+#     cmds = [
+#         [py, "-m", "pip", "install", "--user", "--upgrade", "pip", "wheel"],
+#         [py, "-m", "pip", "install", "--user", "-r", "requirements.txt"],
+#     ]
+#     for cmd in cmds:
+#         rc = subprocess.call(cmd)
+#         if rc != 0:
+#             sys.stderr.write(f"Command failed: {' '.join(cmd)} (exit {rc})\n")
+#             log.error(f"Command failed: {' '.join(cmd)} (exit {rc})\n")
+#             sys.exit(rc)
+#     log.info("requiremetns installed successfully")
+#     sys.exit(0)
 
 def test() -> None:
     """Implements ./run test """
