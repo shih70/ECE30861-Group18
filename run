@@ -34,15 +34,28 @@ def install() -> None:
     # log.info("requiremetns installed successfully")
     sys.exit(0)
 
+def usage() -> None:
+    print("""Usage: ./run [install|test|URL_FILE]
+
+Commands:
+  install     Install dependencies from requirements.txt
+  test        Run the test suite
+  URL_FILE    Run scoring pipeline on the given URL file
+  -h, --help  Show this help message
+""")
+
+
 def main() -> None:
-    
     if len(sys.argv) < 2:
-        print("Usage: ./run [install|test|URL_FILE]", file=sys.stderr)
+        usage()
         sys.exit(1)
 
     arg = sys.argv[1]
-    
-    if arg == "install":
+
+    if arg in ("-h", "--help"):
+        usage()
+        sys.exit(0)
+    elif arg == "install":
         install()
     elif arg == "test":
         from cli_project import cli

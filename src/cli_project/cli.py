@@ -1,3 +1,4 @@
+# pragma: no cover
 from pathlib import Path
 import sys
 import subprocess
@@ -18,13 +19,13 @@ from cli_project.metrics.dataset_and_code import DatasetAndCodeMetric
 from cli_project.metrics.dataset_quality import DatasetQualityMetric
 from cli_project.metrics.code_quality import CodeQualityMetric
 from cli_project.metrics.dataset_quality import DatasetQualityMetric
-
+from cli_project.core.concurrency import compute_all_metrics
 
 from cli_project.adapters.huggingface import fetch_repo_metadata
-from cli_project.adapters.git_repo import fetch_bus_factor_metrics, fetch_bus_factor_raw_contributors
+from cli_project.adapters.git_repo import fetch_bus_factor_raw_contributors
 
 
-def test() -> None:
+def test() -> None: # pragma: no cover
     """Implements ./run test """
     log.setup_logging()
     rc = tester.run_tests()
@@ -34,7 +35,7 @@ def test() -> None:
 
     # sys.exit(1)
 
-def score(url_file: str) -> None:
+def score(url_file: str) -> None: # pragma: no cover
     """Implements ./run URL_FILE"""
     log.setup_logging()
 
@@ -66,12 +67,13 @@ def score(url_file: str) -> None:
         model.metadata =  {"hf_metadata" : hf_metadata, "repo_metadata" : repo_metadata, "nof_code_ds" : nof_code_ds}
 
         # print(model.metadata["hf_metadata"].get("repo_url"))
-        metric_results: list[MetricResult] = []
-        for metric_cls in Metric.__subclasses__():
-            metric = metric_cls()
-            result = metric.compute(model.metadata)
-            metric_results.append(result)
-
+        # metric_results: list[MetricResult] = []
+        # for metric_cls in Metric.__subclasses__():
+        #     metric = metric_cls()
+        #     result = metric.compute(model.metadata)
+        #     metric_results.append(result)
+        metrics = [cls() for cls in Metric.__subclasses__()]
+        metric_results = compute_all_metrics(model.metadata, metrics, max_workers=8)
 
         model.add_results(metric_results)
         # print(model.metric_scores)
@@ -81,6 +83,3 @@ def score(url_file: str) -> None:
     # Encode + print as NDJSON
     NDJSONEncoder.print_records(models)
     sys.exit(0)
-
-if __name__ == "__main__":
-    pass

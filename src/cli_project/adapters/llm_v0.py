@@ -224,15 +224,3 @@ def fetch_ramp_up_time_with_llm(repo_url: str) -> Dict[str, Any]:
             "justification": "Failed to parse LLM output",
             "score": 0.0,
         }
-
-
-# -------------------
-# Example usage
-# -------------------
-if __name__ == "__main__":
-    repo_url = "https://huggingface.co/openai/whisper-tiny/tree/main"
-    perf_output = fetch_performance_claims_with_llm(repo_url)
-    print("LLM Performance Claims Output:\n", json.dumps(perf_output, indent=2))
-
-    ramp_output = fetch_ramp_up_time_with_llm(repo_url)
-    print("\nLLM Ramp-Up Time Output:\n", json.dumps(ramp_output, indent=2))

@@ -12,6 +12,46 @@ from cli_project.urls.base import HFModelURL, CodeRepoURL
 from cli_project.core.entities import HFModel
 from cli_project.adapters.git_repo import fetch_bus_factor_raw_contributors
 
+LICENSE_CASES = [
+    ("MIT", "mit", 1.0),
+    ("Apache License 2.0", "apache-2.0", 1.0),
+    ("BSD-3", "bsd-3-clause", 1.0),
+    ("BSD 3", "bsd-3-clause", 1.0),
+    ("BSD-2", "bsd-2-clause", 1.0),
+    ("BSD 2", "bsd-2-clause", 1.0),
+    ("BSD", "bsd", 1.0),
+    ("LGPL 2.1", "lgpl-2.1", 1.0),
+    ("LGPL 3.0", "lgpl-3.0", 1.0),
+    ("weird-custom-license", "weird-custom-license", 0.0),
+]
+
+@pytest.mark.parametrize("license_str, expected_norm, expected_value", LICENSE_CASES)
+def test_license_metric_all(license_str, expected_norm, expected_value):
+    metadata = {"hf_metadata": {"license": license_str}}
+    metric = LicenseMetric()
+    result = metric.compute(metadata)
+    assert isinstance(result, MetricResult)
+    assert result.name == "license"
+    assert result.value == expected_value
+    assert result.details["normalized"] == expected_norm
+
+
+def test_license_metric_missing_license():
+    """If license is missing entirely, metric should return 0.0 with error detail."""
+    metadata = {"hf_metadata": {}}
+    metric = LicenseMetric()
+    result = metric.compute(metadata)
+    assert result.value == 0.0
+    assert "error" in result.details
+
+
+@pytest.mark.parametrize("raw, expected", [
+    ("", None),
+    (None, None),
+])
+def test_norm_empty_and_none(raw, expected):
+    assert _norm(raw) == expected
+
 def test_license_metric() -> None:
     metadata = {"hf_metadata": {"license": "apache-2.0"}}
     metric = LicenseMetric()
@@ -56,7 +96,7 @@ def test_ramp_up_time_metric() -> None:
     assert isinstance(result.details, dict)
 
 def test_ramp_up_time_metric_missing_url() -> None:
-    metadata = {"hf_metadata": {}}
+    metadata = {"hf_metadata":  {"repo_url": {}}}
     metric = RampUpTimeMetric()
     result = metric.compute(metadata)
     assert result.value == 0.0
@@ -73,7 +113,7 @@ def test_performance_claims_metric() -> None:
     assert isinstance(result.details, dict)
 
 def test_performance_claims_metric_missing_url() -> None:
-    metadata = {"hf_metadata": {}}
+    metadata = {"hf_metadata":  {"repo_url": {}}}
     metric = PerformanceClaimsMetric()
     result = metric.compute(metadata)
     assert result.value == 0.0

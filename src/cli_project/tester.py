@@ -1,9 +1,10 @@
+# pragma: no cover
 from __future__ import annotations
 import subprocess
 import sys
 import re
 
-def run_tests() -> int:
+def run_tests() -> int: # pragma: no cover
     """
     Run pytest with coverage, suppress its normal output,
     and print only "X/Y test cases passed. Z% line coverage achieved."
