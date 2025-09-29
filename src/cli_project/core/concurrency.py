@@ -29,15 +29,6 @@ def compute_all_metrics(
     with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
         futures = {executor.submit(timed_compute, m): m for m in metrics}
         for f in concurrent.futures.as_completed(futures):
-            try:
-                results.append(f.result())
-            except Exception as e:
-                # Handle crashes gracefully
-                results.append(MetricResult(
-                    name=futures[f].name(),
-                    value=0.0,
-                    details={"error": str(e)},
-                    latency_ms=0,
-                ))
+            results.append(f.result())
 
     return results

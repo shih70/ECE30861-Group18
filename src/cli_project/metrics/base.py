@@ -78,9 +78,7 @@ def validate_size_score_map(m: Mapping[str, float]) -> Dict[str, float]:
     out: Dict[str, float] = {}
     for k, v in m.items():
         key = str(k)
-        try:
-            val = float(v)
-        except (TypeError, ValueError):
-            val = 0.0
+        val = float(v)
+
         out[key] = clamp01(val)
     return out

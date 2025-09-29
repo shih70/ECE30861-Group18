@@ -16,10 +16,7 @@ import subprocess
 
 def install() -> None:
     """Implements ./run install"""
-    # log.setup_logging()
-    
-    # log.info("installing requirements..")
-    print("installing requirements..")
+
     py = sys.executable
     cmds = [
         [py, "-m", "pip", "install", "--upgrade", "pip", "wheel"],
